@@ -1,0 +1,53 @@
+# Author: Watosn
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        preset: [linux-clang-debug, linux-clang-release, linux-clang-sanitize]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y ninja-build gfortran
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+      - name: Test
+        if: matrix.preset == 'linux-clang-debug'
+        run: ctest --preset linux-clang-debug --output-on-failure
+
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        preset: [macos-clang-debug, macos-clang-release, macos-clang-sanitize]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: brew install ninja gcc
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
+      - name: Test
+        if: matrix.preset == 'macos-clang-debug'
+        run: ctest --preset macos-clang-debug --output-on-failure
+
+  windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        preset: [windows-msvc-debug, windows-msvc-release]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }}
+      - name: Build
+        run: cmake --build --preset ${{ matrix.preset }}
