@@ -8,6 +8,7 @@
 
 #include <array>
 #include <cmath>
+#include <vector>
 
 #include "msis21/detail/constants.hpp"
 #include "msis21/detail/gfn.hpp"
@@ -49,6 +50,137 @@ double linear_dot(const Parameters& parameters, const std::array<double, kMaxBas
   return sum;
 }
 
+void set_range(std::array<bool, kMaxBasisFunctions>& swg, int begin, int end, bool value) {
+  for (int i = begin; i <= end; ++i) {
+    swg[static_cast<std::size_t>(i)] = value;
+  }
+}
+
+void set_indices(std::array<bool, kMaxBasisFunctions>& swg, const std::vector<int>& idx, bool value) {
+  for (const int i : idx) {
+    swg[static_cast<std::size_t>(i)] = value;
+  }
+}
+
+std::array<bool, kMaxBasisFunctions> legacy_switches_to_basis(const Options& options) {
+  std::array<bool, kMaxBasisFunctions> swg;
+  swg.fill(true);
+
+  std::array<double, 25> swleg{};
+  std::array<double, 25> swc{};
+  for (int i = 0; i < 25; ++i) {
+    const double sv = static_cast<double>(options.switches.legacy[static_cast<std::size_t>(i)]);
+    swleg[static_cast<std::size_t>(i)] = std::fmod(sv, 2.0);
+    swc[static_cast<std::size_t>(i)] =
+        (std::abs(sv) == 1.0 || std::abs(sv) == 2.0) ? 1.0 : 0.0;
+  }
+
+  swg[0] = true;
+  set_range(swg, kCsfx, kCsfx + kNsfx - 1, swleg[0] == 1.0);
+  swg[310] = (swleg[0] == 1.0);
+  set_range(swg, 1, 6, swleg[1] == 1.0);
+  set_range(swg, 304, 305, swleg[1] == 1.0);
+  set_range(swg, 311, 312, swleg[1] == 1.0);
+  set_range(swg, 313, 314, swleg[1] == 1.0);
+  set_indices(swg, {7, 8, 11, 12, 15, 16, 19, 20}, swleg[2] == 1.0);
+  set_range(swg, 306, 307, swleg[2] == 1.0);
+  set_indices(swg, {21, 22, 25, 26, 29, 30, 33, 34}, swleg[3] == 1.0);
+  set_range(swg, 308, 309, swleg[3] == 1.0);
+  set_indices(swg, {9, 10, 13, 14, 17, 18}, swleg[4] == 1.0);
+  set_indices(swg, {23, 24, 27, 28, 31, 32}, swleg[5] == 1.0);
+  set_range(swg, 35, 94, swleg[6] == 1.0);
+  set_range(swg, 300, 303, swleg[6] == 1.0);
+  set_range(swg, 95, 144, swleg[7] == 1.0);
+  set_range(swg, 145, 184, swleg[13] == 1.0);
+  set_range(swg, kCmag, kCmag + 1, false);
+  if ((swleg[8] > 0.0) || (swleg[12] == 1.0)) {
+    swg[static_cast<std::size_t>(kCmag)] = true;
+    swg[static_cast<std::size_t>(kCmag + 1)] = true;
+  }
+  if (swleg[8] < 0.0) {
+    swg[static_cast<std::size_t>(kCmag)] = false;
+    swg[static_cast<std::size_t>(kCmag + 1)] = true;
+  }
+  set_range(swg, kCmag + 2, kCmag + 12, swleg[8] == 1.0);
+  set_range(swg, kCmag + 28, kCmag + 40, swleg[8] == -1.0);
+  set_range(swg, kCspw, kCsfx - 1, (swleg[10] == 1.0) && (swleg[9] == 1.0));
+  set_range(swg, kCut, kCut + kNut - 1, (swleg[11] == 1.0) && (swleg[9] == 1.0));
+  set_range(swg, kCmag + 13, kCmag + 25, (swleg[12] == 1.0) && (swleg[9] == 1.0));
+  set_range(swg, kCmag + 41, kCmag + 53, (swleg[12] == 1.0) && (swleg[9] == 1.0));
+
+  set_range(swg, kCsfxMod, kCsfxMod + kNsfxMod - 1, swc[0] == 1.0);
+  if (swc[0] == 0.0) {
+    set_range(swg, 302, 303, false);
+    set_range(swg, 304, 305, false);
+    set_range(swg, 306, 307, false);
+    set_range(swg, 308, 309, false);
+    set_range(swg, 311, 314, false);
+    swg[447] = false;
+    swg[454] = false;
+  }
+  if (swc[1] == 0.0) {
+    set_range(swg, 9, 20, false);
+    set_range(swg, 23, 34, false);
+    set_range(swg, 35, 184, false);
+    set_range(swg, 185, 294, false);
+    set_range(swg, 392, 414, false);
+    set_range(swg, 420, 442, false);
+    set_range(swg, 449, 453, false);
+  }
+  if (swc[2] == 0.0) {
+    set_range(swg, 201, 204, false);
+    set_range(swg, 209, 212, false);
+    set_range(swg, 217, 220, false);
+    set_range(swg, 255, 258, false);
+    set_range(swg, 263, 266, false);
+    set_range(swg, 271, 274, false);
+    set_range(swg, 306, 307, false);
+  }
+  if (swc[3] == 0.0) {
+    set_range(swg, 225, 228, false);
+    set_range(swg, 233, 236, false);
+    set_range(swg, 241, 244, false);
+    set_range(swg, 275, 278, false);
+    set_range(swg, 283, 286, false);
+    set_range(swg, 291, 294, false);
+    set_range(swg, 308, 309, false);
+  }
+  if (swc[4] == 0.0) {
+    set_range(swg, 47, 70, false);
+    set_range(swg, 105, 124, false);
+    set_range(swg, 153, 168, false);
+    set_range(swg, 197, 200, false);
+    set_range(swg, 205, 216, false);
+    set_range(swg, 259, 270, false);
+    set_range(swg, 394, 397, false);
+    set_range(swg, 407, 410, false);
+    set_range(swg, 422, 425, false);
+    set_range(swg, 435, 438, false);
+    swg[446] = false;
+  }
+  if (swc[5] == 0.0) {
+    set_range(swg, 221, 224, false);
+    set_range(swg, 229, 232, false);
+    set_range(swg, 237, 240, false);
+    set_range(swg, 279, 282, false);
+    set_range(swg, 287, 290, false);
+  }
+  if (swc[6] == 0.0) {
+    set_range(swg, 398, 401, false);
+    set_range(swg, 426, 429, false);
+  }
+  if (swc[10] == 0.0) {
+    set_range(swg, 402, 410, false);
+    set_range(swg, 430, 438, false);
+    set_range(swg, 452, 453, false);
+  }
+  if (swc[11] == 0.0) {
+    set_range(swg, 411, 414, false);
+    set_range(swg, 439, 440, false);
+  }
+  return swg;
+}
+
 }  // namespace
 
 CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Parameters& parameters) {
@@ -69,13 +201,7 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   globe_input.sflux = in.f107;
   globe_input.ap = {in.ap, in.ap, in.ap, in.ap, in.ap, in.ap, in.ap};
 
-  std::array<bool, kMaxBasisFunctions> switches;
-  switches.fill(true);
-  for (int i = 0; i < 25; ++i) {
-    if (options.switches.legacy[static_cast<std::size_t>(i)] == 0) {
-      switches[static_cast<std::size_t>(i)] = false;
-    }
-  }
+  const auto switches = legacy_switches_to_basis(options);
 
   const auto basis = globe.globe(globe_input, switches);
   // Temperature anchors from the TN subset: [itb0=21, itgb0=22, itex=23].
