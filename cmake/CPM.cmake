@@ -45,10 +45,14 @@ if(NOT COMMAND CPMAddPackage)
       endif()
     endforeach()
 
+    set(cpm_git_tag "v${CPM_VERSION}")
+    if(CPM_GITHUB_REPOSITORY STREQUAL "fmtlib/fmt")
+      set(cpm_git_tag "${CPM_VERSION}")
+    endif()
     FetchContent_Declare(
       ${CPM_NAME}
       GIT_REPOSITORY https://github.com/${CPM_GITHUB_REPOSITORY}.git
-      GIT_TAG v${CPM_VERSION}
+      GIT_TAG ${cpm_git_tag}
     )
     FetchContent_MakeAvailable(${CPM_NAME})
   endfunction()

@@ -20,6 +20,14 @@ cmake --build --preset macos-clang-debug
 ctest --preset macos-clang-debug --output-on-failure
 ```
 
+## Logging and Printing
+- Runtime logging uses `spdlog`.
+- CLI/output formatting uses `fmt`.
+- Optional log level override:
+```bash
+MSIS21_LOG_LEVEL=debug ./build/macos-clang-debug/msis21_cli 70178 64800 400 0 0 12 150 150 4
+```
+
 ## Examples
 Single-point query:
 ```bash

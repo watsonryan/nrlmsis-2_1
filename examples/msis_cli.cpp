@@ -7,11 +7,13 @@
 #include "msis21/msis21.hpp"
 
 #include <cstdlib>
-#include <iostream>
+#include <fmt/format.h>
 
 int main(int argc, char** argv) {
   if (argc != 10) {
-    std::cerr << "usage: msis_cli <iyd> <sec> <alt_km> <glat_deg> <glon_deg> <stl_hr> <f107a> <f107> <ap>\n";
+    fmt::print(stderr,
+               "usage: msis_cli <iyd> <sec> <alt_km> <glat_deg> <glon_deg> <stl_hr> <f107a> "
+               "<f107> <ap>\n");
     return 1;
   }
 
@@ -28,7 +30,7 @@ int main(int argc, char** argv) {
 
   auto model = msis21::Model::load_from_file("data/msis21.parm", msis21::Options{});
   const auto out = model.evaluate(in);
-  std::cout << "status=" << static_cast<int>(out.status) << "\n";
-  std::cout << "rho=" << out.out.rho << " t=" << out.out.t << "\n";
+  fmt::print("status={}\n", static_cast<int>(out.status));
+  fmt::print("rho={} t={}\n", out.out.rho, out.out.t);
   return 0;
 }

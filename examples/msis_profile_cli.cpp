@@ -7,8 +7,7 @@
 #include "msis21/msis21.hpp"
 
 #include <cstdlib>
-#include <iomanip>
-#include <iostream>
+#include <fmt/format.h>
 
 namespace {
 
@@ -30,19 +29,18 @@ int main(int argc, char** argv) {
     z_end = std::atof(argv[2]);
     z_step = std::atof(argv[3]);
   } else if (argc != 1) {
-    std::cerr << "usage: msis_profile_cli [start_km end_km step_km]\n";
+    fmt::print(stderr, "usage: msis_profile_cli [start_km end_km step_km]\n");
     return 1;
   }
 
   if (z_step <= 0.0 || z_start < z_end) {
-    std::cerr << "require start_km >= end_km and step_km > 0\n";
+    fmt::print(stderr, "require start_km >= end_km and step_km > 0\n");
     return 1;
   }
 
   auto model = msis21::Model::load_from_file("data/msis21.parm", msis21::Options{});
 
-  std::cout << "# alt_km rho_g_cm3 o_g_cm3 ao_g_cm3 status\n";
-  std::cout << std::scientific << std::setprecision(8);
+  fmt::print("# alt_km rho_g_cm3 o_g_cm3 ao_g_cm3 status\n");
   for (double z = z_start; z >= z_end - 1e-9; z -= z_step) {
     msis21::Input in{};
     in.iyd = 70178;
@@ -58,8 +56,12 @@ int main(int argc, char** argv) {
     const auto out = model.evaluate(in);
     const double o_g_cm3 = oxygen_mass_g_cm3(out.out.o);
     const double ao_g_cm3 = oxygen_mass_g_cm3(out.out.o_anom);
-    std::cout << std::fixed << std::setprecision(1) << z << " " << std::scientific << out.out.rho
-              << " " << o_g_cm3 << " " << ao_g_cm3 << " " << static_cast<int>(out.status) << "\n";
+    fmt::print("{:.1f} {:.8e} {:.8e} {:.8e} {}\n",
+               z,
+               out.out.rho,
+               o_g_cm3,
+               ao_g_cm3,
+               static_cast<int>(out.status));
   }
 
   return 0;

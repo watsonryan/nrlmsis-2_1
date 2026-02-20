@@ -12,6 +12,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
+CPMAddPackage(
+  NAME fmt
+  GITHUB_REPOSITORY fmtlib/fmt
+  VERSION 10.2.1
+)
+CPMAddPackage(
+  NAME spdlog
+  GITHUB_REPOSITORY gabime/spdlog
+  VERSION 1.14.1
+  OPTIONS "SPDLOG_FMT_EXTERNAL ON"
+)
+
 add_library(msis21_fortran_ref STATIC
   src/fortran_bridge.F90
   ${MSIS21_FORTRAN_SOURCE_DIR}/msis_constants.F90
@@ -33,6 +46,7 @@ add_library(msis21 STATIC
   src/parm_reader.cpp
   src/fortran_unformatted_reader.cpp
   src/fortran_backend.cpp
+  src/log.cpp
   src/utils.cpp
   src/gfn.cpp
   src/tfn.cpp
@@ -45,7 +59,7 @@ add_library(msis21::msis21 ALIAS msis21)
 target_include_directories(msis21
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(msis21 PRIVATE msis21_fortran_ref)
+target_link_libraries(msis21 PRIVATE msis21_fortran_ref spdlog::spdlog fmt::fmt)
 
 if(MSVC)
   target_compile_options(msis21 PRIVATE /W4)
@@ -70,7 +84,7 @@ endif()
 
 if(MSIS21_BUILD_CLI)
   add_executable(msis21_cli examples/msis_cli.cpp)
-  target_link_libraries(msis21_cli PRIVATE msis21::msis21)
+  target_link_libraries(msis21_cli PRIVATE msis21::msis21 fmt::fmt)
   add_executable(msis21_profile_cli examples/msis_profile_cli.cpp)
-  target_link_libraries(msis21_profile_cli PRIVATE msis21::msis21)
+  target_link_libraries(msis21_profile_cli PRIVATE msis21::msis21 fmt::fmt)
 endif()
