@@ -19,14 +19,15 @@ int main(int argc, char** argv) {
 
   msis21::Input in;
   in.iyd = std::atoi(argv[1]);
-  in.sec = std::atof(argv[2]);
-  in.alt_km = std::atof(argv[3]);
-  in.glat_deg = std::atof(argv[4]);
-  in.glon_deg = std::atof(argv[5]);
-  in.stl_hr = std::atof(argv[6]);
-  in.f107a = std::atof(argv[7]);
-  in.f107 = std::atof(argv[8]);
-  in.ap = std::atof(argv[9]);
+  // Parse as float first to mirror legacy Fortran test harness input semantics.
+  in.sec = static_cast<double>(std::strtof(argv[2], nullptr));
+  in.alt_km = static_cast<double>(std::strtof(argv[3], nullptr));
+  in.glat_deg = static_cast<double>(std::strtof(argv[4], nullptr));
+  in.glon_deg = static_cast<double>(std::strtof(argv[5], nullptr));
+  in.stl_hr = static_cast<double>(std::strtof(argv[6], nullptr));
+  in.f107a = static_cast<double>(std::strtof(argv[7], nullptr));
+  in.f107 = static_cast<double>(std::strtof(argv[8], nullptr));
+  in.ap = static_cast<double>(std::strtof(argv[9], nullptr));
 
   auto model = msis21::Model::load_from_file("data/msis21.parm", msis21::Options{});
   const auto out = model.evaluate(in);

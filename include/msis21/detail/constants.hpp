@@ -125,10 +125,13 @@ inline constexpr std::array<double, 5> kS6zetaB = {
 inline constexpr std::array<double, 5> kS6zetaA = {
     0.023376623376623, 0.378732378732379, 0.500743700743701, 0.095538448479625,
     0.001608848667672};
-inline constexpr std::array<double, 2> kC1o1Adj = {0.257142857142857, -0.102857142686844};
+inline constexpr std::array<double, 2> kC1o1Adj = {
+    2.5714285714285701e-01, -1.0285714268684400e-01};
 inline constexpr std::array<double, 4> kC1o1 = {
-    1.75, -2.916666573405061, -1.624999900076852, 21.458332647194382};
-inline constexpr std::array<double, 2> kC1noAdj = {0.166666666666667, -0.066666666666667};
-inline constexpr std::array<double, 4> kC1no = {1.5, -3.75, 0.0, 15.0};
+    1.7500000000000000e+00, -2.9166665734050610e+00, -1.6249999000768520e+00, 2.1458332647194382e+01};
+inline constexpr std::array<double, 2> kC1noAdj = {
+    1.6666666666666701e-01, -6.6666666666667005e-02};
+inline constexpr std::array<double, 4> kC1no = {
+    1.5000000000000000e+00, -3.7500000000000000e+00, 0.0000000000000000e+00, 1.5000000000000000e+01};
 
 }  // namespace msis21::detail
