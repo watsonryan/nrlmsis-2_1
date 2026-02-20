@@ -12,10 +12,10 @@
 
 namespace {
 
-double anomalous_o_mass_g_cm3(double o_anom_cm3) {
+double oxygen_mass_g_cm3(double o_cm3) {
   constexpr double avogadro = 6.02214076e23;
   constexpr double oxygen_mass_kg = (31.9988 / 2.0) / (1.0e3 * avogadro);
-  return o_anom_cm3 * oxygen_mass_kg * 1.0e3;
+  return o_cm3 * oxygen_mass_kg * 1.0e3;
 }
 
 }  // namespace
@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 
   auto model = msis21::Model::load_from_file("data/msis21.parm", msis21::Options{});
 
-  std::cout << "# alt_km rho_g_cm3 ao_g_cm3 status\n";
+  std::cout << "# alt_km rho_g_cm3 o_g_cm3 ao_g_cm3 status\n";
   std::cout << std::scientific << std::setprecision(8);
   for (double z = z_start; z >= z_end - 1e-9; z -= z_step) {
     msis21::Input in{};
@@ -56,9 +56,10 @@ int main(int argc, char** argv) {
     in.ap = 4.0;
 
     const auto out = model.evaluate(in);
-    const double ao_g_cm3 = anomalous_o_mass_g_cm3(out.out.o_anom);
+    const double o_g_cm3 = oxygen_mass_g_cm3(out.out.o);
+    const double ao_g_cm3 = oxygen_mass_g_cm3(out.out.o_anom);
     std::cout << std::fixed << std::setprecision(1) << z << " " << std::scientific << out.out.rho
-              << " " << ao_g_cm3 << " " << static_cast<int>(out.status) << "\n";
+              << " " << o_g_cm3 << " " << ao_g_cm3 << " " << static_cast<int>(out.status) << "\n";
   }
 
   return 0;

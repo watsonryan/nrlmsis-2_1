@@ -33,6 +33,7 @@ Density/AO profile from 2000 km to 250 km in g/cm^3:
 Columns:
 - `alt_km`
 - `rho_g_cm3` (total mass density)
+- `o_g_cm3` (atomic oxygen partial mass density)
 - `ao_g_cm3` (anomalous oxygen partial mass density)
 - `status`
 

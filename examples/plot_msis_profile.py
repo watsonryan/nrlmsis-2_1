@@ -14,25 +14,29 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 
-def run_profile(cli_path: Path, start_km: float, end_km: float, step_km: float) -> tuple[list[float], list[float], list[float]]:
+def run_profile(
+    cli_path: Path, start_km: float, end_km: float, step_km: float
+) -> tuple[list[float], list[float], list[float], list[float]]:
     cmd = [str(cli_path), f"{start_km}", f"{end_km}", f"{step_km}"]
     out = subprocess.check_output(cmd, text=True)
 
     alt_km: list[float] = []
     rho_g_cm3: list[float] = []
+    o_g_cm3: list[float] = []
     ao_g_cm3: list[float] = []
 
     for line in out.splitlines():
         if not line or line.startswith("#"):
             continue
-        z_s, rho_s, ao_s, status_s = line.split()
+        z_s, rho_s, o_s, ao_s, status_s = line.split()
         if status_s != "0":
             continue
         alt_km.append(float(z_s))
         rho_g_cm3.append(float(rho_s))
+        o_g_cm3.append(float(o_s))
         ao_g_cm3.append(float(ao_s))
 
-    return alt_km, rho_g_cm3, ao_g_cm3
+    return alt_km, rho_g_cm3, o_g_cm3, ao_g_cm3
 
 
 def main() -> int:
@@ -48,7 +52,9 @@ def main() -> int:
     if not cli_path.exists():
         raise FileNotFoundError(f"CLI not found: {cli_path}")
 
-    alt_km, rho_g_cm3, ao_g_cm3 = run_profile(cli_path, args.start_km, args.end_km, args.step_km)
+    alt_km, rho_g_cm3, o_g_cm3, ao_g_cm3 = run_profile(
+        cli_path, args.start_km, args.end_km, args.step_km
+    )
     if not alt_km:
         raise RuntimeError("No valid profile samples returned by CLI")
 
@@ -60,10 +66,12 @@ def main() -> int:
     axes[0].set_title("NRLMSIS Total Mass Density")
     axes[0].grid(True, which="both", ls="--", alpha=0.35)
 
-    axes[1].semilogx(ao_g_cm3, alt_km, color="#b45309", lw=2.2)
-    axes[1].set_xlabel("Anomalous O Mass Density [g/cm^3]")
-    axes[1].set_title("NRLMSIS Anomalous Oxygen")
+    axes[1].semilogx(o_g_cm3, alt_km, color="#0369a1", lw=2.2, label="Atomic O")
+    axes[1].semilogx(ao_g_cm3, alt_km, color="#b45309", lw=1.4, ls="--", label="Anomalous O")
+    axes[1].set_xlabel("Oxygen Mass Density [g/cm^3]")
+    axes[1].set_title("NRLMSIS Atomic vs Anomalous O")
     axes[1].grid(True, which="both", ls="--", alpha=0.35)
+    axes[1].legend(loc="lower left")
 
     ymin = min(args.start_km, args.end_km)
     ymax = max(args.start_km, args.end_km)
