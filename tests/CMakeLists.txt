@@ -1,13 +1,4 @@
 # Author: Watosn
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/CPM.cmake)
-
-CPMAddPackage(
-  NAME googletest
-  GITHUB_REPOSITORY google/googletest
-  VERSION 1.17.0
-  OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt ON"
-)
-
 add_executable(msis21_tests
   test_smoke.cpp
   test_fortran_reader.cpp

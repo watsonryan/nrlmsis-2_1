@@ -12,18 +12,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
-CPMAddPackage(
-  NAME fmt
-  GITHUB_REPOSITORY fmtlib/fmt
-  GIT_TAG 10.2.1
-)
-CPMAddPackage(
-  NAME spdlog
-  GITHUB_REPOSITORY gabime/spdlog
-  VERSION 1.14.1
-  OPTIONS "SPDLOG_FMT_EXTERNAL ON"
-)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/dependencies.cmake)
 
 add_library(msis21 STATIC
   src/msis21.cpp
@@ -44,6 +33,9 @@ target_include_directories(msis21
   PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(msis21 PRIVATE spdlog::spdlog fmt::fmt)
+if(MSIS21_EIGEN_TARGET)
+  target_link_libraries(msis21 PRIVATE ${MSIS21_EIGEN_TARGET})
+endif()
 
 if(MSVC)
   target_compile_options(msis21 PRIVATE /W4)
