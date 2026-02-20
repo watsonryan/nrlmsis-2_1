@@ -15,6 +15,7 @@ add_library(msis21 STATIC
   src/model.cpp
   src/parm_reader.cpp
   src/fortran_unformatted_reader.cpp
+  src/utils.cpp
 )
 add_library(msis21::msis21 ALIAS msis21)
 

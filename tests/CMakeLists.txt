@@ -12,6 +12,7 @@ add_executable(msis21_tests
   test_smoke.cpp
   test_fortran_reader.cpp
   test_parm_reader.cpp
+  test_utils.cpp
 )
 
 target_link_libraries(msis21_tests
