@@ -1,0 +1,10 @@
+# Author: Watosn
+/build/
+/.cache/
+/.idea/
+/.vscode/
+*.swp
+*.DS_Store
+Testing/
+CMakeUserPresets.json
+compile_commands.json

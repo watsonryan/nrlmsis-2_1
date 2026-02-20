@@ -1,0 +1,3 @@
+# Author: Watosn
+Checks: '-*,bugprone-*,performance-*,readability-*'
+WarningsAsErrors: '*'
