@@ -151,3 +151,23 @@ TEST(GoldenVectors, HarnessLoadsAndEvaluatesDataset) {
     EXPECT_LE(rel_err(result.out.t, ref.t), kTolT);
   }
 }
+
+TEST(GoldenVectors, AtomicOxygenRegressionCase) {
+  msis21::Options options;
+  auto model = msis21::Model::load_from_file(msis21_data_path("msis21.parm"), options);
+  msis21::Input in{};
+  in.iyd = 70338;
+  in.sec = 71881.0;
+  in.alt_km = 52.1;
+  in.glat_deg = 66.3;
+  in.glon_deg = 259.3;
+  in.stl_hr = 13.25;
+  in.f107a = 158.3;
+  in.f107 = 152.4;
+  in.ap = 5.0;
+  const auto result = model.evaluate(in);
+  ASSERT_EQ(result.status, msis21::Status::Ok);
+  constexpr double kExpectedO = 3.6130985269374433e+09;
+  const double rel = std::abs(result.out.o - kExpectedO) / kExpectedO;
+  EXPECT_LE(rel, 1.0e-12);
+}
