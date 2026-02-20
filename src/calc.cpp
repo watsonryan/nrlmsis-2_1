@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "msis21/detail/constants.hpp"
+#include "msis21/detail/fortran_backend.hpp"
 #include "msis21/detail/gfn.hpp"
 #include "msis21/detail/parm_reader.hpp"
 #include "msis21/detail/utils.hpp"
@@ -187,6 +188,9 @@ std::array<bool, kMaxBasisFunctions> legacy_switches_to_basis(const Options& opt
 CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Parameters& parameters) {
   if (!validate_input(in)) {
     return CalcResult{.status = Status::InvalidInput};
+  }
+  if (fortran_backend_available()) {
+    return evaluate_fortran_backend(in);
   }
   if (parameters.rows != kMaxBasisFunctions || parameters.cols != kParmColumnCount) {
     return CalcResult{.status = Status::ParmFileFormatError};

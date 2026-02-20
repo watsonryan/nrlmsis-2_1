@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "msis21/detail/calc.hpp"
+#include "msis21/detail/fortran_backend.hpp"
 #include "msis21/detail/parm_reader.hpp"
 
 namespace msis21 {
@@ -18,6 +19,10 @@ Model Model::load_from_file(const std::filesystem::path& parm_path, Options opti
   const Status status = detail::load_parameters(parm_path, *parameters);
   if (status != Status::Ok) {
     return Model(status, nullptr, std::move(options));
+  }
+  const Status fortran_status = detail::initialize_fortran_backend(parm_path);
+  if (fortran_status != Status::Ok) {
+    return Model(fortran_status, nullptr, std::move(options));
   }
   return Model(Status::Ok, parameters, std::move(options));
 }
