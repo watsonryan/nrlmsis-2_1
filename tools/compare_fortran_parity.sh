@@ -49,7 +49,7 @@ program msis_ref_msiscalc
 end program msis_ref_msiscalc
 EOF
 
-gfortran -cpp -DDBLE -O0 -o "${TMP_DIR}/msis_ref_msiscalc" \
+(cd "${TMP_DIR}" && gfortran -cpp -DDBLE -O0 -o "${TMP_DIR}/msis_ref_msiscalc" \
   "${FORTRAN_DIR}/msis_constants.F90" \
   "${FORTRAN_DIR}/msis_init.F90" \
   "${FORTRAN_DIR}/msis_utils.F90" \
@@ -57,7 +57,7 @@ gfortran -cpp -DDBLE -O0 -o "${TMP_DIR}/msis_ref_msiscalc" \
   "${FORTRAN_DIR}/msis_tfn.F90" \
   "${FORTRAN_DIR}/msis_dfn.F90" \
   "${FORTRAN_DIR}/msis_calc.F90" \
-  "${TMP_DIR}/msis_ref_msiscalc.F90"
+  "${TMP_DIR}/msis_ref_msiscalc.F90")
 
 cp -f "${FORTRAN_DIR}/msis21.parm" "${TMP_DIR}/msis21.parm"
 
