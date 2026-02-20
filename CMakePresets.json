@@ -1,0 +1,144 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "MSIS21_WARNINGS_AS_ERRORS": "ON",
+        "MSIS21_ENABLE_FP_STRICT": "ON"
+      }
+    },
+    {
+      "name": "macos-clang-debug",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "macos-clang-release",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "macos-clang-sanitize",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
+    },
+    {
+      "name": "macos-clang-profile",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "linux-clang-debug",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "linux-clang-release",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "linux-clang-sanitize",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
+      }
+    },
+    {
+      "name": "linux-clang-profile",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "windows-msvc-debug",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "windows-msvc-release",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "windows-msvc-sanitize",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "/fsanitize=address"
+      }
+    },
+    {
+      "name": "windows-msvc-profile",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /Zi"
+      }
+    }
+  ],
+  "buildPresets": [
+    {"name": "macos-clang-debug", "configurePreset": "macos-clang-debug"},
+    {"name": "macos-clang-release", "configurePreset": "macos-clang-release"},
+    {"name": "macos-clang-sanitize", "configurePreset": "macos-clang-sanitize"},
+    {"name": "macos-clang-profile", "configurePreset": "macos-clang-profile"},
+    {"name": "linux-clang-debug", "configurePreset": "linux-clang-debug"},
+    {"name": "linux-clang-release", "configurePreset": "linux-clang-release"},
+    {"name": "linux-clang-sanitize", "configurePreset": "linux-clang-sanitize"},
+    {"name": "linux-clang-profile", "configurePreset": "linux-clang-profile"},
+    {"name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug"},
+    {"name": "windows-msvc-release", "configurePreset": "windows-msvc-release"},
+    {"name": "windows-msvc-sanitize", "configurePreset": "windows-msvc-sanitize"},
+    {"name": "windows-msvc-profile", "configurePreset": "windows-msvc-profile"}
+  ],
+  "testPresets": [
+    {"name": "macos-clang-debug", "configurePreset": "macos-clang-debug", "output": {"outputOnFailure": true}}
+  ]
+}
