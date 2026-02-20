@@ -100,6 +100,10 @@ inline constexpr std::array<double, 30> kNodesTN = {
     -15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0,
     35.0,  40.0,  45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0,
     85.0,  92.5,  102.5, 112.5, 122.5, 132.5, 142.5, 152.5, 162.5, 172.5};
+inline constexpr std::array<double, 14> kNodesO1 = {
+    35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 92.5, 102.5, 112.5};
+inline constexpr std::array<double, 14> kNodesNO = {
+    47.5, 55.0, 62.5, 70.0, 77.5, 85.0, 92.5, 100.0, 107.5, 115.0, 122.5, 130.0, 137.5, 145.0};
 inline constexpr std::array<double, 3> kS4zetaA = {
     0.257142857142857, 0.653968253968254, 0.088888888888889};
 inline constexpr std::array<double, 3> kWghtAxdz = {
@@ -119,5 +123,10 @@ inline constexpr std::array<double, 5> kS6zetaB = {
 inline constexpr std::array<double, 5> kS6zetaA = {
     0.023376623376623, 0.378732378732379, 0.500743700743701, 0.095538448479625,
     0.001608848667672};
+inline constexpr std::array<double, 2> kC1o1Adj = {0.257142857142857, -0.102857142686844};
+inline constexpr std::array<double, 4> kC1o1 = {
+    1.75, -2.916666573405061, -1.624999900076852, 21.458332647194382};
+inline constexpr std::array<double, 2> kC1noAdj = {0.166666666666667, -0.066666666666667};
+inline constexpr std::array<double, 4> kC1no = {1.5, -3.75, 0.0, 15.0};
 
 }  // namespace msis21::detail

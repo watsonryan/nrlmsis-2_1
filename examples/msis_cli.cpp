@@ -31,6 +31,17 @@ int main(int argc, char** argv) {
   auto model = msis21::Model::load_from_file("data/msis21.parm", msis21::Options{});
   const auto out = model.evaluate(in);
   fmt::print("status={}\n", static_cast<int>(out.status));
-  fmt::print("rho={} t={}\n", out.out.rho, out.out.t);
+  fmt::print("he={} o={} n2={} o2={} ar={} rho={} h={} n={} oa={} no={} t={}\n",
+             out.out.he,
+             out.out.o,
+             out.out.n2,
+             out.out.o2,
+             out.out.ar,
+             out.out.rho,
+             out.out.h,
+             out.out.n,
+             out.out.o_anom,
+             out.out.no,
+             out.out.t);
   return 0;
 }

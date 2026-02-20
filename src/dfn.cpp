@@ -7,6 +7,7 @@
 #include "msis21/detail/dfn.hpp"
 
 #include <cmath>
+#include <span>
 
 #include "msis21/detail/gfn.hpp"
 #include "msis21/detail/utils.hpp"
@@ -132,6 +133,35 @@ EtaTable make_eta_tn() {
   return eta;
 }
 
+EtaTable make_eta_generic(std::span<const double> nodes, int nd, int kmax) {
+  EtaTable eta{};
+  for (int k = 2; k <= kmax; ++k) {
+    for (int j = 0; j <= (nd - k + 1); ++j) {
+      eta[static_cast<std::size_t>(j)][static_cast<std::size_t>(k)] =
+          1.0 / (nodes[static_cast<std::size_t>(j + k - 1)] - nodes[static_cast<std::size_t>(j)]);
+    }
+  }
+  return eta;
+}
+
+double spline_species_value(const std::array<double, kNsplO1 + 2>& cf, const BsplineResult& b) {
+  double sum = 0.0;
+  for (int rel = -3; rel <= 0; ++rel) {
+    const int idx = b.i + rel;
+    if (idx >= 0 && idx < static_cast<int>(cf.size())) {
+      sum += cf[static_cast<std::size_t>(idx)] * b.value(rel, 4);
+    }
+  }
+  return sum;
+}
+
+std::pair<double, double> hrfact_and_derivative_at_ref(double zref) {
+  const double gammaterm0 = std::tanh((zref - kZetagamma) * kHgamma);
+  const double hrfact_ref = 0.5 * (1.0 + gammaterm0);
+  const double dhrfact_ref = (1.0 - (zref - kZetagamma) * (1.0 - gammaterm0) * kHgamma) / hrfact_ref;
+  return {hrfact_ref, dhrfact_ref};
+}
+
 }  // namespace
 
 double pwmp(double z,
@@ -204,6 +234,16 @@ double dfnx(double z,
       case 5:
       case 7:
         return std::exp(lndtotz + dpro.lnphi_f + ccor);
+      case 4: {
+        static const EtaTable eta_o1 = make_eta_generic(kNodesO1, kNdO1, 4);
+        const auto b = bspline(z, kNodesO1, kNdO1, 4, eta_o1);
+        return std::exp(spline_species_value(dpro.cf, b));
+      }
+      case 10: {
+        static const EtaTable eta_no = make_eta_generic(kNodesNO, kNdNo, 4);
+        const auto b = bspline(z, kNodesNO, kNdNo, 4, eta_no);
+        return std::exp(spline_species_value(dpro.cf, b));
+      }
       default:
         return kDmissing;
     }
@@ -402,7 +442,7 @@ DnParm dfnparm(int ispec,
   dpro.zeta_mi[3] = dpro.zeta_m + dpro.hmu;
   dpro.zeta_mi[4] = dpro.zeta_m + 2.0 * dpro.hmu;
   dpro.mi[0] = kMbar;
-  dpro.mi[4] = kSpecMass[static_cast<std::size_t>(ispec)];
+  dpro.mi[4] = kSpecMass[static_cast<std::size_t>(ispec - 1)];
   dpro.mi[2] = (dpro.mi[0] + dpro.mi[4]) / 2.0;
   const double delm = std::tanh(1.0) * (dpro.mi[4] - dpro.mi[0]) / 2.0;
   dpro.mi[1] = dpro.mi[2] - delm;
@@ -457,6 +497,40 @@ DnParm dfnparm(int ispec,
     } else {
       dpro.izref -= dpro.xmi[4];
     }
+  }
+
+  if (ispec == 4) {
+    for (int izf = 0; izf <= (kNsplO1 - 1); ++izf) {
+      dpro.cf[static_cast<std::size_t>(izf)] = subset_linear_dot(parameters, kO1Start, izf + 10, gf);
+    }
+    const double cterm = dpro.c * std::exp(-(dpro.zref - dpro.zeta_c) / dpro.hc);
+    const auto [hr_o1_ref, dhr_o1_ref] = hrfact_and_derivative_at_ref(kZetaA);
+    const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (hr_o1_ref * dpro.hr));
+    const double rterm = dpro.r * (1.0 + rterm0);
+    const double mzref = pwmp(dpro.zref, dpro.zeta_mi, dpro.mi, dpro.ami);
+    const double bc1 = dpro.lndref - cterm + rterm - dpro.cf[7] * kC1o1Adj[0];
+    const double bc2 = -mzref * kG0DivKb / tpro.tzeta_a - tpro.dlntdz_a + cterm / dpro.hc +
+                       rterm * (1.0 - rterm0) / dpro.hr * dhr_o1_ref - dpro.cf[7] * kC1o1Adj[1];
+    dpro.cf[8] = bc1 * kC1o1[0] + bc2 * kC1o1[1];
+    dpro.cf[9] = bc1 * kC1o1[2] + bc2 * kC1o1[3];
+  }
+
+  if (ispec == 10) {
+    for (int izf = 0; izf <= (kNsplNo - 1); ++izf) {
+      dpro.cf[static_cast<std::size_t>(izf)] = subset_linear_dot(parameters, kNoStart, izf + 10, gf);
+      dpro.cf[static_cast<std::size_t>(izf)] +=
+          geomag(subset_geomag_params(parameters, kNoStart, izf + 10), bf_mag, plg_mag, swg_mag);
+    }
+    const double cterm = dpro.c * std::exp(-(dpro.zref - dpro.zeta_c) / dpro.hc);
+    const auto [hr_no_ref, dhr_no_ref] = hrfact_and_derivative_at_ref(kZetaB);
+    const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (hr_no_ref * dpro.hr));
+    const double rterm = dpro.r * (1.0 + rterm0);
+    const double mzref = pwmp(dpro.zref, dpro.zeta_mi, dpro.mi, dpro.ami);
+    const double bc1 = dpro.lndref - cterm + rterm - dpro.cf[7] * kC1noAdj[0];
+    const double bc2 = -mzref * kG0DivKb / tpro.tb0 - tpro.tgb0 / tpro.tb0 + cterm / dpro.hc +
+                       rterm * (1.0 - rterm0) / dpro.hr * dhr_no_ref - dpro.cf[7] * kC1noAdj[1];
+    dpro.cf[8] = bc1 * kC1no[0] + bc2 * kC1no[1];
+    dpro.cf[9] = bc1 * kC1no[2] + bc2 * kC1no[3];
   }
 
   return dpro;

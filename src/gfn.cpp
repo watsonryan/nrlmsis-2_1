@@ -256,7 +256,9 @@ double GlobeCalculator::solzen(double ddd, double lst, double lat, double lon) {
                                            0.103221204};
 
   const double wlon = 360.0 - lon;
-  const double teqnx = ddd + (lst + wlon / 15.0) / 24.0 + 0.9369;
+  (void)wlon;
+  (void)lst;
+  const double teqnx = ddd + 0.9369;
 
   double dec = 23.256 * std::sin(p[0] * (teqnx - 82.242)) +
                0.381 * std::sin(p[1] * (teqnx - 44.855)) +

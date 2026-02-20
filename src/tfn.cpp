@@ -37,6 +37,11 @@ std::array<double, kMaxBasisFunctions> column_beta(const Parameters& parameters,
   return out;
 }
 
+bool smod_enabled(const Parameters& parameters, int col) {
+  return beta_at(parameters, kCsfxMod, col) != 0.0 || beta_at(parameters, kCsfxMod + 1, col) != 0.0 ||
+         beta_at(parameters, kCsfxMod + 2, col) != 0.0;
+}
+
 double dot3(const std::array<double, kNl + 1>& v, int start, const std::array<double, 3>& w) {
   return v[static_cast<std::size_t>(start)] * w[0] + v[static_cast<std::size_t>(start + 1)] * w[1] +
          v[static_cast<std::size_t>(start + 2)] * w[2];
@@ -147,8 +152,11 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
     tpro.cf[static_cast<std::size_t>(ix)] = linear_dot(parameters, gf, ix);
   }
   for (int ix = 0; ix <= (kItb0 - 1); ++ix) {
-    const auto beta_col = column_beta(parameters, ix);
-    tpro.cf[static_cast<std::size_t>(ix)] += sfluxmod(ix, gf, beta_col, safe_sflux_dffact(parameters, ix), swg);
+    if (smod_enabled(parameters, ix)) {
+      const auto beta_col = column_beta(parameters, ix);
+      tpro.cf[static_cast<std::size_t>(ix)] +=
+          sfluxmod(ix, gf, beta_col, safe_sflux_dffact(parameters, ix), swg);
+    }
   }
 
   tpro.tex = linear_dot(parameters, gf, kItex);
@@ -174,10 +182,14 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
   tpro.tex += geomag(geomag_params_for_col(parameters, kItex), bf_mag, plg_mag, swg_mag);
   tpro.tex += utdep(ut_params_for_col(parameters, kItex), bf_ut, swg_ut);
 
-  tpro.tgb0 += sfluxmod(kItgb0, gf, beta_tgb0, safe_sflux_dffact(parameters, kItgb0), swg);
+  if (smod_enabled(parameters, kItgb0)) {
+    tpro.tgb0 += sfluxmod(kItgb0, gf, beta_tgb0, safe_sflux_dffact(parameters, kItgb0), swg);
+  }
   tpro.tgb0 += geomag(geomag_params_for_col(parameters, kItgb0), bf_mag, plg_mag, swg_mag);
 
-  tpro.tb0 += sfluxmod(kItb0, gf, beta_tb0, safe_sflux_dffact(parameters, kItb0), swg);
+  if (smod_enabled(parameters, kItb0)) {
+    tpro.tb0 += sfluxmod(kItb0, gf, beta_tb0, safe_sflux_dffact(parameters, kItb0), swg);
+  }
   tpro.tb0 += geomag(geomag_params_for_col(parameters, kItb0), bf_mag, plg_mag, swg_mag);
 
   if (!std::isfinite(tpro.tb0) || tpro.tb0 <= 0.0) {

@@ -270,25 +270,34 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
     lndtotz = lnpz - std::log(kKb * t);
   }
   const double hrfact = 0.5 * (1.0 + std::tanh(kHgamma * (z - kZetagamma)));
-  const double n2 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(2, basis, switches, parameters, tpro));
-  const double o2 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(3, basis, switches, parameters, tpro));
-  const double o = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(4, basis, switches, parameters, tpro));
-  const double he = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(5, basis, switches, parameters, tpro));
-  const double h = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(6, basis, switches, parameters, tpro));
-  const double ar = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(7, basis, switches, parameters, tpro));
-  const double n = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(8, basis, switches, parameters, tpro));
-  const double o_anom =
+  const double n2_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(2, basis, switches, parameters, tpro));
+  const double o2_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(3, basis, switches, parameters, tpro));
+  const double o_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(4, basis, switches, parameters, tpro));
+  const double he_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(5, basis, switches, parameters, tpro));
+  const double h_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(6, basis, switches, parameters, tpro));
+  const double ar_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(7, basis, switches, parameters, tpro));
+  const double n_m3 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(8, basis, switches, parameters, tpro));
+  const double o_anom_m3 =
       dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(9, basis, switches, parameters, tpro));
-  const double no = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(10, basis, switches, parameters, tpro));
+  const double no_m3 =
+      dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(10, basis, switches, parameters, tpro));
 
-  auto n_cm3_to_m3 = [](double x) { return x <= kDmissing * 10.0 ? 0.0 : x * 1e6; };
+  auto safe_m3 = [](double x) { return x <= kDmissing * 10.0 ? 0.0 : x; };
   const double rho_kg_m3 =
-      n_cm3_to_m3(n2) * kSpecMass[1] + n_cm3_to_m3(o2) * kSpecMass[2] +
-      n_cm3_to_m3(o) * kSpecMass[3] + n_cm3_to_m3(he) * kSpecMass[4] +
-      n_cm3_to_m3(h) * kSpecMass[5] + n_cm3_to_m3(ar) * kSpecMass[6] +
-      n_cm3_to_m3(n) * kSpecMass[7] + n_cm3_to_m3(o_anom) * kSpecMass[8] +
-      n_cm3_to_m3(no) * kSpecMass[9];
+      safe_m3(n2_m3) * kSpecMass[1] + safe_m3(o2_m3) * kSpecMass[2] + safe_m3(o_m3) * kSpecMass[3] +
+      safe_m3(he_m3) * kSpecMass[4] + safe_m3(h_m3) * kSpecMass[5] + safe_m3(ar_m3) * kSpecMass[6] +
+      safe_m3(n_m3) * kSpecMass[7] + safe_m3(o_anom_m3) * kSpecMass[8] + safe_m3(no_m3) * kSpecMass[9];
   const double rho_g_cm3 = rho_kg_m3 * 1e-3;
+  auto m3_to_cm3 = [](double x) { return x <= kDmissing * 10.0 ? kDmissing : x * 1.0e-6; };
+  const double he = m3_to_cm3(he_m3);
+  const double o = m3_to_cm3(o_m3);
+  const double n2 = m3_to_cm3(n2_m3);
+  const double o2 = m3_to_cm3(o2_m3);
+  const double ar = m3_to_cm3(ar_m3);
+  const double h = m3_to_cm3(h_m3);
+  const double n = m3_to_cm3(n_m3);
+  const double o_anom = m3_to_cm3(o_anom_m3);
+  const double no = m3_to_cm3(no_m3);
 
   Output out{};
   out.he = he;
