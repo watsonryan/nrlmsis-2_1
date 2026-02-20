@@ -209,7 +209,7 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
 
   GlobeCalculator globe;
   GlobeInput globe_input;
-  globe_input.doy = static_cast<double>(in.iyd % 1000) + in.sec / 86400.0;
+  globe_input.doy = static_cast<double>(in.iyd % 1000);
   globe_input.utsec = in.sec;
   globe_input.lat = in.glat_deg;
   globe_input.lon = in.glon_deg;
@@ -286,7 +286,7 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   const double rho_kg_m3 =
       safe_m3(n2_m3) * kSpecMass[1] + safe_m3(o2_m3) * kSpecMass[2] + safe_m3(o_m3) * kSpecMass[3] +
       safe_m3(he_m3) * kSpecMass[4] + safe_m3(h_m3) * kSpecMass[5] + safe_m3(ar_m3) * kSpecMass[6] +
-      safe_m3(n_m3) * kSpecMass[7] + safe_m3(o_anom_m3) * kSpecMass[8] + safe_m3(no_m3) * kSpecMass[9];
+      safe_m3(n_m3) * kSpecMass[7] + safe_m3(o_anom_m3) * kSpecMass[8];
   const double rho_g_cm3 = rho_kg_m3 * 1e-3;
   auto m3_to_cm3 = [](double x) { return x <= kDmissing * 10.0 ? kDmissing : x * 1.0e-6; };
   const double he = m3_to_cm3(he_m3);

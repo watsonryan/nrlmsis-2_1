@@ -69,14 +69,6 @@ std::array<double, kNut> subset_ut_params(const Parameters& parameters, int subs
   return p;
 }
 
-double sflux_dffact_for_subset(const Parameters& parameters, int subset_start, int col_local) {
-  const double b0 = subset_beta_at(parameters, subset_start, 0, col_local);
-  if (!std::isfinite(b0) || std::abs(b0) < 1e-12) {
-    return 0.0;
-  }
-  return 1.0 / b0;
-}
-
 std::array<double, 13> geomag_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
   std::array<double, 13> out{};
   for (int i = 0; i < 13; ++i) {
@@ -349,7 +341,7 @@ DnParm dfnparm(int ispec,
       dpro.zeta_m = subset_beta_at(parameters, kHeStart, 0, 1);
       dpro.hml = subset_beta_at(parameters, kHeStart, 0, 2);
       dpro.hmu = subset_beta_at(parameters, kHeStart, 0, 3);
-      dpro.r = dyn_terms(kHeStart, 7, sflux_dffact_for_subset(parameters, kHeStart, 7));
+      dpro.r = dyn_terms(kHeStart, 7, 1.0);
       dpro.zeta_r = subset_beta_at(parameters, kHeStart, 0, 8);
       dpro.hr = subset_beta_at(parameters, kHeStart, 0, 9);
       break;
