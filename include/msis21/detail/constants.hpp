@@ -38,6 +38,7 @@ inline constexpr double kNa = 6.02214076e23;
 inline constexpr double kG0 = 9.80665;
 inline constexpr double kG0DivKb = kG0 / kKb * 1.0e3;
 inline constexpr double kMbar = 28.96546 / (1.0e3 * kNa);
+inline constexpr double kMbarG0DivKb = kMbar * kG0 / kKb * 1.0e3;
 inline constexpr double kLnP0 = 11.515614;
 inline constexpr double kToa = 4000.0;
 inline constexpr double kHoa =
@@ -93,5 +94,30 @@ inline constexpr int kCmag = kCsfxMod + kNsfxMod;
 inline constexpr int kCut = kCmag + kNmag;
 inline constexpr double kSfluxAvgReference = 150.0;
 inline constexpr double kSfluxAvgQuadCutoff = 150.0;
+inline constexpr double kZetagamma = 100.0;
+inline constexpr double kHgamma = 1.0 / 30.0;
+inline constexpr std::array<double, 30> kNodesTN = {
+    -15.0, -10.0, -5.0, 0.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0,
+    35.0,  40.0,  45.0, 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0,
+    85.0,  92.5,  102.5, 112.5, 122.5, 132.5, 142.5, 152.5, 162.5, 172.5};
+inline constexpr std::array<double, 3> kS4zetaA = {
+    0.257142857142857, 0.653968253968254, 0.088888888888889};
+inline constexpr std::array<double, 3> kWghtAxdz = {
+    -0.102857142857, 0.0495238095238, 0.053333333333};
+inline constexpr std::array<double, 3> kS4zetaF = {
+    0.166666666666667, 0.666666666666667, 0.166666666666667};
+inline constexpr std::array<double, 3> kS5zeta0 = {
+    0.458333333333333, 0.458333333333333, 0.041666666666667};
+inline constexpr std::array<double, 4> kS5zetaB = {
+    0.041666666666667, 0.458333333333333, 0.458333333333333, 0.041666666666667};
+inline constexpr std::array<double, 4> kS5zetaA = {
+    0.085714285714286, 0.587590187590188, 0.313020313020313, 0.013675213675214};
+inline constexpr std::array<double, 4> kS5zetaF = {
+    0.041666666666667, 0.458333333333333, 0.458333333333333, 0.041666666666667};
+inline constexpr std::array<double, 5> kS6zetaB = {
+    0.008771929824561, 0.216228070175439, 0.55, 0.216666666666667, 0.008333333333333};
+inline constexpr std::array<double, 5> kS6zetaA = {
+    0.023376623376623, 0.378732378732379, 0.500743700743701, 0.095538448479625,
+    0.001608848667672};
 
 }  // namespace msis21::detail

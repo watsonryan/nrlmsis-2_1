@@ -14,6 +14,7 @@
 #include "msis21/detail/gfn.hpp"
 #include "msis21/detail/log.hpp"
 #include "msis21/detail/parm_reader.hpp"
+#include "msis21/detail/tfn.hpp"
 #include "msis21/detail/utils.hpp"
 #include <spdlog/spdlog.h>
 
@@ -40,79 +41,15 @@ bool validate_input(const Input& in) {
   return true;
 }
 
-double beta_at(const Parameters& parameters, int row, int col) {
-  return parameters.beta[static_cast<std::size_t>(row) +
-                         static_cast<std::size_t>(col) * parameters.rows];
-}
-
-double linear_dot(const Parameters& parameters, const std::array<double, kMaxBasisFunctions>& basis, int col) {
-  double sum = 0.0;
-  for (int row = 0; row <= kMbf; ++row) {
-    sum += beta_at(parameters, row, col) * basis[static_cast<std::size_t>(row)];
+EtaTable make_eta_tn() {
+  EtaTable eta{};
+  for (int k = 2; k <= 6; ++k) {
+    for (int j = 0; j <= kNl; ++j) {
+      eta[static_cast<std::size_t>(j)][static_cast<std::size_t>(k)] =
+          1.0 / (kNodesTN[static_cast<std::size_t>(j + k - 1)] - kNodesTN[static_cast<std::size_t>(j)]);
+    }
   }
-  return sum;
-}
-
-std::array<double, kMaxBasisFunctions> column_beta(const Parameters& parameters, int col) {
-  std::array<double, kMaxBasisFunctions> out{};
-  for (int row = 0; row < static_cast<int>(kMaxBasisFunctions); ++row) {
-    out[static_cast<std::size_t>(row)] = beta_at(parameters, row, col);
-  }
-  return out;
-}
-
-std::array<double, 13> geomag_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
-  std::array<double, 13> out{};
-  for (int i = 0; i < 13; ++i) {
-    out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCmag + i)];
-  }
-  return out;
-}
-
-std::array<double, 14> geomag_plg_slice(const std::array<double, kMaxBasisFunctions>& basis) {
-  std::array<double, 14> out{};
-  for (int i = 0; i < 14; ++i) {
-    out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCmag + 13 + i)];
-  }
-  return out;
-}
-
-std::array<double, 9> ut_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
-  std::array<double, 9> out{};
-  for (int i = 0; i < 9; ++i) {
-    out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCut + i)];
-  }
-  return out;
-}
-
-std::array<double, kNmag> geomag_params_for_col(const Parameters& parameters, int col) {
-  std::array<double, kNmag> out{};
-  for (int i = 0; i < kNmag; ++i) {
-    out[static_cast<std::size_t>(i)] = beta_at(parameters, kCmag + i, col);
-  }
-  return out;
-}
-
-std::array<double, kNut> ut_params_for_col(const Parameters& parameters, int col) {
-  std::array<double, kNut> out{};
-  for (int i = 0; i < kNut; ++i) {
-    out[static_cast<std::size_t>(i)] = beta_at(parameters, kCut + i, col);
-  }
-  return out;
-}
-
-double safe_sflux_dffact(const Parameters& parameters, int col) {
-  const double b0 = beta_at(parameters, 0, col);
-  if (!std::isfinite(b0) || std::abs(b0) < 1e-12) {
-    return 0.0;
-  }
-  return 1.0 / b0;
-}
-
-bool tnode_uses_sflux_mod(const Parameters& parameters, int col) {
-  return std::abs(beta_at(parameters, kCsfxMod, col)) > 0.0 ||
-         std::abs(beta_at(parameters, kCsfxMod + 1, col)) > 0.0 ||
-         std::abs(beta_at(parameters, kCsfxMod + 2, col)) > 0.0;
+  return eta;
 }
 
 void set_range(std::array<bool, kMaxBasisFunctions>& swg, int begin, int end, bool value) {
@@ -271,71 +208,22 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   const auto switches = legacy_switches_to_basis(options);
 
   const auto basis = globe.globe(globe_input, switches);
-  const auto bf_mag = geomag_bf_slice(basis);
-  const auto plg_mag = geomag_plg_slice(basis);
-  const auto bf_ut = ut_bf_slice(basis);
-  std::array<bool, kNmag> swg_mag{};
-  for (int i = 0; i < kNmag; ++i) {
-    swg_mag[static_cast<std::size_t>(i)] = switches[static_cast<std::size_t>(kCmag + i)];
-  }
-  std::array<bool, kNut> swg_ut{};
-  for (int i = 0; i < kNut; ++i) {
-    swg_ut[static_cast<std::size_t>(i)] = switches[static_cast<std::size_t>(kCut + i)];
-  }
-
-  // Temperature anchors from the TN subset: [itb0=21, itgb0=22, itex=23].
-  double tb0 = linear_dot(parameters, basis, 21);
-  double tgb0 = linear_dot(parameters, basis, 22);
-  double tex = linear_dot(parameters, basis, 23);
-
-  const auto beta_tex = column_beta(parameters, 23);
-  const auto beta_tgb0 = column_beta(parameters, 22);
-  const auto beta_tb0 = column_beta(parameters, 21);
-  const auto p_mag_tex = geomag_params_for_col(parameters, 23);
-  const auto p_mag_tgb0 = geomag_params_for_col(parameters, 22);
-  const auto p_mag_tb0 = geomag_params_for_col(parameters, 21);
-  const auto p_ut_tex = ut_params_for_col(parameters, 23);
-  if (tnode_uses_sflux_mod(parameters, 23)) {
-    tex += sfluxmod(23, basis, beta_tex, safe_sflux_dffact(parameters, 23), switches);
-  }
-  tex += geomag(p_mag_tex, bf_mag, plg_mag, swg_mag);
-  tex += utdep(p_ut_tex, bf_ut, swg_ut);
-  if (tnode_uses_sflux_mod(parameters, 22)) {
-    tgb0 += sfluxmod(22, basis, beta_tgb0, safe_sflux_dffact(parameters, 22), switches);
-  }
-  tgb0 += geomag(p_mag_tgb0, bf_mag, plg_mag, swg_mag);
-  if (tnode_uses_sflux_mod(parameters, 21)) {
-    tb0 += sfluxmod(21, basis, beta_tb0, safe_sflux_dffact(parameters, 21), switches);
-  }
-  tb0 += geomag(p_mag_tb0, bf_mag, plg_mag, swg_mag);
-
-  if (!std::isfinite(tb0) || tb0 < 120.0 || tb0 > 600.0) {
-    tb0 = 190.0;
-  }
-  if (!std::isfinite(tex) || tex < (tb0 + 50.0) || tex > 4000.0) {
-    tex = 900.0;
-  }
-  if (!std::isfinite(tgb0) || std::abs(tgb0) < 1e-6) {
-    tgb0 = 2.0;
-  }
-  double sigma = tgb0 / (tex - tb0);
-  if (!std::isfinite(sigma) || sigma <= 1e-4) {
-    sigma = 0.03;
-  }
+  const auto tpro = tfnparm(basis, switches, parameters);
 
   const double z = alt2gph(in.glat_deg, in.alt_km);
+  static const EtaTable eta_tn = make_eta_tn();
   double t = 0.0;
-  if (z <= 86.0) {
-    t = 288.15 - 6.5 * z;
-    if (t < 170.0) {
-      t = 170.0;
-    }
-  } else if (z < kZetaB) {
-    const double alpha = (z - 86.0) / (kZetaB - 86.0);
-    const double t86 = 288.15 - 6.5 * 86.0;
-    t = (1.0 - alpha) * t86 + alpha * tb0;
+  if (z < kZetaB) {
+    const int kmax = (z < kZetaF) ? 5 : 6;
+    const auto bs = bspline(z, kNodesTN, kNd + 2, kmax, eta_tn);
+    std::array<double, 4> w{};
+    w[0] = bs.value(-3, 4);
+    w[1] = bs.value(-2, 4);
+    w[2] = bs.value(-1, 4);
+    w[3] = bs.value(0, 4);
+    t = tfnx(z, bs.i, w, tpro);
   } else {
-    t = tex - (tex - tb0) * std::exp(-sigma * (z - kZetaB));
+    t = tpro.tex - (tpro.tex - tpro.tb0) * std::exp(-tpro.sigma * (z - kZetaB));
   }
   if (!std::isfinite(t) || t < 120.0) {
     t = 120.0;

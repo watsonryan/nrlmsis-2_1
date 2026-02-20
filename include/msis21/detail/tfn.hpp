@@ -8,6 +8,7 @@
 #include <array>
 
 #include "msis21/detail/constants.hpp"
+#include "msis21/detail/parm_reader.hpp"
 
 namespace msis21::detail {
 
@@ -37,5 +38,8 @@ struct TnParm {
 
 [[nodiscard]] std::array<double, 3> continuity_coefficients(double tex, double tgb0, double tb0);
 [[nodiscard]] double tfnx(double z, int iz, const std::array<double, 4>& wght, const TnParm& tpro);
+[[nodiscard]] TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
+                             const std::array<bool, kMaxBasisFunctions>& swg,
+                             const Parameters& parameters);
 
 }  // namespace msis21::detail
