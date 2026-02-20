@@ -208,21 +208,23 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   }
 
   GlobeCalculator globe;
+  const auto f32 = [](double x) { return static_cast<double>(static_cast<float>(x)); };
   GlobeInput globe_input;
   globe_input.doy = static_cast<double>(in.iyd % 1000);
-  globe_input.utsec = in.sec;
-  globe_input.lat = in.glat_deg;
-  globe_input.lon = in.glon_deg;
-  globe_input.sfluxavg = in.f107a;
-  globe_input.sflux = in.f107;
-  globe_input.ap = {in.ap, in.ap, in.ap, in.ap, in.ap, in.ap, in.ap};
+  globe_input.utsec = f32(in.sec);
+  globe_input.lat = f32(in.glat_deg);
+  globe_input.lon = f32(in.glon_deg);
+  globe_input.sfluxavg = f32(in.f107a);
+  globe_input.sflux = f32(in.f107);
+  const double apd = f32(in.ap);
+  globe_input.ap = {apd, apd, apd, apd, apd, apd, apd};
 
   const auto switches = legacy_switches_to_basis(options);
 
   const auto basis = globe.globe(globe_input, switches);
   const auto tpro = tfnparm(basis, switches, parameters);
 
-  const double z = alt2gph(in.glat_deg, in.alt_km);
+  const double z = alt2gph(f32(in.glat_deg), f32(in.alt_km));
   static const EtaTable eta_tn = make_eta_tn();
   double t = 0.0;
   BsplineResult bs{};
