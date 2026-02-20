@@ -10,6 +10,7 @@ CPMAddPackage(
 
 add_executable(msis21_tests
   test_smoke.cpp
+  test_fortran_reader.cpp
 )
 
 target_link_libraries(msis21_tests
