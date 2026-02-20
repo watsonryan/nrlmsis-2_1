@@ -5,6 +5,8 @@
  */
 #pragma once
 
+#include <array>
+
 namespace msis21 {
 
 struct Input {
@@ -17,6 +19,8 @@ struct Input {
   double f107a{};
   double f107{};
   double ap{};
+  std::array<double, 7> ap_history{};
+  bool has_ap_history{};
 };
 
 struct Output {

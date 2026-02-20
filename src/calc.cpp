@@ -36,6 +36,13 @@ bool validate_input(const Input& in) {
   if (in.f107a < 0.0 || in.f107 < 0.0 || in.ap < 0.0) {
     return false;
   }
+  if (in.has_ap_history) {
+    for (double ap_i : in.ap_history) {
+      if (ap_i < 0.0) {
+        return false;
+      }
+    }
+  }
   if (in.alt_km < -1.0 || in.alt_km > 2000.0) {
     return false;
   }
@@ -218,8 +225,14 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   globe_input.lon = f32(in.glon_deg);
   globe_input.sfluxavg = f32(in.f107a);
   globe_input.sflux = f32(in.f107);
-  const double apd = f32(in.ap);
-  globe_input.ap = {apd, apd, apd, apd, apd, apd, apd};
+  if (in.has_ap_history) {
+    for (std::size_t i = 0; i < globe_input.ap.size(); ++i) {
+      globe_input.ap[i] = f32(in.ap_history[i]);
+    }
+  } else {
+    const double apd = f32(in.ap);
+    globe_input.ap = {apd, apd, apd, apd, apd, apd, apd};
+  }
 
   const auto switches = legacy_switches_to_basis(options);
 
