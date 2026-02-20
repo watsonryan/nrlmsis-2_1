@@ -281,4 +281,144 @@ double GlobeCalculator::solzen(double ddd, double lst, double lat, double lon) {
   return std::acos(cosx) / kDeg2Rad;
 }
 
+namespace {
+
+double g0fn(double a, double k00r, double k00s) {
+  return a + (k00r - 1.0) * (a + (std::exp(-a * k00s) - 1.0) / k00s);
+}
+
+}  // namespace
+
+double sfluxmod(int iz,
+                const std::array<double, kMaxBasisFunctions>& gf,
+                const std::array<double, kMaxBasisFunctions>& beta_col,
+                double dffact,
+                const std::array<bool, kMaxBasisFunctions>& swg) {
+  const auto smod_term = [&](int idx) { return swg[static_cast<std::size_t>(idx)] ? 1.0 : 0.0; };
+
+  const double df_terms = (beta_col[static_cast<std::size_t>(kCsfx + 2)] *
+                               gf[static_cast<std::size_t>(kCsfxMod + 2)] +
+                           beta_col[static_cast<std::size_t>(kCsfx + 3)] *
+                               gf[static_cast<std::size_t>(kCsfxMod + 3)]) *
+                          dffact;
+
+  const double f1 = smod_term(kCsfxMod) *
+                    (beta_col[static_cast<std::size_t>(kCsfxMod)] *
+                         gf[static_cast<std::size_t>(kCsfxMod)] +
+                     df_terms);
+  const double f2 = smod_term(kCsfxMod + 1) *
+                    (beta_col[static_cast<std::size_t>(kCsfxMod + 1)] *
+                         gf[static_cast<std::size_t>(kCsfxMod)] +
+                     df_terms);
+  const double f3 = smod_term(kCsfxMod + 2) *
+                    (beta_col[static_cast<std::size_t>(kCsfxMod + 2)] *
+                     gf[static_cast<std::size_t>(kCsfxMod)]);
+
+  (void)iz;
+  double sum = 0.0;
+  for (int j = 0; j <= kMbf; ++j) {
+    const auto idx = static_cast<std::size_t>(j);
+    const bool is_zsfx = (j == 9 || j == 10 || j == 13 || j == 14 || j == 17 || j == 18);
+    const bool is_tsfx = (j >= kCtide && j < kCspw);
+    const bool is_psfx = (j >= kCspw && j <= (kCspw + 59));
+    if (is_zsfx) {
+      sum += beta_col[idx] * gf[idx] * f1;
+      continue;
+    }
+    if (is_tsfx) {
+      sum += beta_col[idx] * gf[idx] * f2;
+      continue;
+    }
+    if (is_psfx) {
+      sum += beta_col[idx] * gf[idx] * f3;
+      continue;
+    }
+  }
+  return sum;
+}
+
+double geomag(const std::array<double, kNmag>& p0,
+              const std::array<double, 13>& bf,
+              const std::array<double, 14>& plg_flat,
+              const std::array<bool, kNmag>& swg_mag) {
+  if (!(swg_mag[0] || swg_mag[1])) {
+    return 0.0;
+  }
+
+  std::array<double, kNmag> p = p0;
+  auto plg = [&](int n, int m) -> double { return plg_flat[static_cast<std::size_t>(n + 7 * m)]; };
+
+  if (swg_mag[0] == swg_mag[1]) {
+    if (p[1] == 0.0) {
+      return 0.0;
+    }
+    for (int i = 2; i <= 25; ++i) {
+      if (!swg_mag[static_cast<std::size_t>(i)]) {
+        p[static_cast<std::size_t>(i)] = 0.0;
+      }
+    }
+    p[8] = p0[8];
+    const double del_a = g0fn(bf[0], p[0], p[1]);
+    const double g =
+        (p[2] * plg(0, 0) + p[3] * plg(2, 0) + p[4] * plg(4, 0) +
+         (p[5] * plg(1, 0) + p[6] * plg(3, 0) + p[7] * plg(5, 0)) * std::cos(bf[8] - p[8]) +
+         (p[9] * plg(1, 1) + p[10] * plg(3, 1) + p[11] * plg(5, 1)) * std::cos(bf[9] - p[12]) +
+         (1.0 + p[13] * plg(1, 0)) * (p[14] * plg(2, 1) + p[15] * plg(4, 1) + p[16] * plg(6, 1)) *
+             std::cos(bf[10] - p[17]) +
+         (p[18] * plg(1, 1) + p[19] * plg(3, 1) + p[20] * plg(5, 1)) * std::cos(bf[10] - p[21]) *
+             std::cos(bf[8] - p[8]) +
+         (p[22] * plg(1, 0) + p[23] * plg(3, 0) + p[24] * plg(5, 0)) * std::cos(bf[11] - p[25]));
+    return g * del_a;
+  }
+
+  if (p[28] == 0.0) {
+    return 0.0;
+  }
+  for (int i = 30; i < kNmag; ++i) {
+    if (!swg_mag[static_cast<std::size_t>(i)]) {
+      p[static_cast<std::size_t>(i)] = 0.0;
+    }
+  }
+  p[36] = p0[36];
+  const double gbeta = p[28] / (1.0 + p[29] * (45.0 - bf[12]));
+  const double ex = std::exp(-10800.0 * gbeta);
+  const double sumex = 1.0 + (1.0 - std::pow(ex, 19.0)) * std::pow(ex, 0.5) / (1.0 - ex);
+  std::array<double, 6> g{};
+  for (int i = 0; i < 6; ++i) {
+    g[static_cast<std::size_t>(i)] = g0fn(bf[static_cast<std::size_t>(i)], p[26], p[27]);
+  }
+  const double del_a =
+      (g[0] + (g[1] * ex + g[2] * ex * ex + g[3] * std::pow(ex, 3.0) +
+               (g[4] * std::pow(ex, 4.0) + g[5] * std::pow(ex, 12.0)) *
+                   (1.0 - std::pow(ex, 8.0)) / (1.0 - ex))) /
+      sumex;
+
+  const double gmag =
+      (p[30] * plg(0, 0) + p[31] * plg(2, 0) + p[32] * plg(4, 0) +
+       (p[33] * plg(1, 0) + p[34] * plg(3, 0) + p[35] * plg(5, 0)) * std::cos(bf[8] - p[36]) +
+       (p[37] * plg(1, 1) + p[38] * plg(3, 1) + p[39] * plg(5, 1)) * std::cos(bf[9] - p[40]) +
+       (1.0 + p[41] * plg(1, 0)) * (p[42] * plg(2, 1) + p[43] * plg(4, 1) + p[44] * plg(6, 1)) *
+           std::cos(bf[10] - p[45]) +
+       (p[46] * plg(1, 1) + p[47] * plg(3, 1) + p[48] * plg(5, 1)) * std::cos(bf[10] - p[49]) *
+           std::cos(bf[8] - p[36]) +
+       (p[50] * plg(1, 0) + p[51] * plg(3, 0) + p[52] * plg(5, 0)) * std::cos(bf[11] - p[53]));
+  return gmag * del_a;
+}
+
+double utdep(const std::array<double, kNut>& p0,
+             const std::array<double, 9>& bf,
+             const std::array<bool, kNut>& swg_ut) {
+  std::array<double, kNut> p = p0;
+  for (int i = 3; i < kNut; ++i) {
+    if (!swg_ut[static_cast<std::size_t>(i)]) {
+      p[static_cast<std::size_t>(i)] = 0.0;
+    }
+  }
+  return std::cos(bf[0] - p[0]) * (1.0 + p[3] * bf[4] * std::cos(bf[1] - p[1])) *
+             (1.0 + p[4] * bf[2]) * (1.0 + p[5] * bf[4]) *
+             (p[6] * bf[4] + p[7] * bf[5] + p[8] * bf[6]) +
+         std::cos(bf[0] - p[2] + 2.0 * bf[3]) * (p[9] * bf[7] + p[10] * bf[8]) *
+             (1.0 + p[11] * bf[2]);
+}
+
 }  // namespace msis21::detail

@@ -53,6 +53,68 @@ double linear_dot(const Parameters& parameters, const std::array<double, kMaxBas
   return sum;
 }
 
+std::array<double, kMaxBasisFunctions> column_beta(const Parameters& parameters, int col) {
+  std::array<double, kMaxBasisFunctions> out{};
+  for (int row = 0; row < static_cast<int>(kMaxBasisFunctions); ++row) {
+    out[static_cast<std::size_t>(row)] = beta_at(parameters, row, col);
+  }
+  return out;
+}
+
+std::array<double, 13> geomag_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
+  std::array<double, 13> out{};
+  for (int i = 0; i < 13; ++i) {
+    out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCmag + i)];
+  }
+  return out;
+}
+
+std::array<double, 14> geomag_plg_slice(const std::array<double, kMaxBasisFunctions>& basis) {
+  std::array<double, 14> out{};
+  for (int i = 0; i < 14; ++i) {
+    out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCmag + 13 + i)];
+  }
+  return out;
+}
+
+std::array<double, 9> ut_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
+  std::array<double, 9> out{};
+  for (int i = 0; i < 9; ++i) {
+    out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCut + i)];
+  }
+  return out;
+}
+
+std::array<double, kNmag> geomag_params_for_col(const Parameters& parameters, int col) {
+  std::array<double, kNmag> out{};
+  for (int i = 0; i < kNmag; ++i) {
+    out[static_cast<std::size_t>(i)] = beta_at(parameters, kCmag + i, col);
+  }
+  return out;
+}
+
+std::array<double, kNut> ut_params_for_col(const Parameters& parameters, int col) {
+  std::array<double, kNut> out{};
+  for (int i = 0; i < kNut; ++i) {
+    out[static_cast<std::size_t>(i)] = beta_at(parameters, kCut + i, col);
+  }
+  return out;
+}
+
+double safe_sflux_dffact(const Parameters& parameters, int col) {
+  const double b0 = beta_at(parameters, 0, col);
+  if (!std::isfinite(b0) || std::abs(b0) < 1e-12) {
+    return 0.0;
+  }
+  return 1.0 / b0;
+}
+
+bool tnode_uses_sflux_mod(const Parameters& parameters, int col) {
+  return std::abs(beta_at(parameters, kCsfxMod, col)) > 0.0 ||
+         std::abs(beta_at(parameters, kCsfxMod + 1, col)) > 0.0 ||
+         std::abs(beta_at(parameters, kCsfxMod + 2, col)) > 0.0;
+}
+
 void set_range(std::array<bool, kMaxBasisFunctions>& swg, int begin, int end, bool value) {
   for (int i = begin; i <= end; ++i) {
     swg[static_cast<std::size_t>(i)] = value;
@@ -209,10 +271,43 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   const auto switches = legacy_switches_to_basis(options);
 
   const auto basis = globe.globe(globe_input, switches);
+  const auto bf_mag = geomag_bf_slice(basis);
+  const auto plg_mag = geomag_plg_slice(basis);
+  const auto bf_ut = ut_bf_slice(basis);
+  std::array<bool, kNmag> swg_mag{};
+  for (int i = 0; i < kNmag; ++i) {
+    swg_mag[static_cast<std::size_t>(i)] = switches[static_cast<std::size_t>(kCmag + i)];
+  }
+  std::array<bool, kNut> swg_ut{};
+  for (int i = 0; i < kNut; ++i) {
+    swg_ut[static_cast<std::size_t>(i)] = switches[static_cast<std::size_t>(kCut + i)];
+  }
+
   // Temperature anchors from the TN subset: [itb0=21, itgb0=22, itex=23].
   double tb0 = linear_dot(parameters, basis, 21);
   double tgb0 = linear_dot(parameters, basis, 22);
   double tex = linear_dot(parameters, basis, 23);
+
+  const auto beta_tex = column_beta(parameters, 23);
+  const auto beta_tgb0 = column_beta(parameters, 22);
+  const auto beta_tb0 = column_beta(parameters, 21);
+  const auto p_mag_tex = geomag_params_for_col(parameters, 23);
+  const auto p_mag_tgb0 = geomag_params_for_col(parameters, 22);
+  const auto p_mag_tb0 = geomag_params_for_col(parameters, 21);
+  const auto p_ut_tex = ut_params_for_col(parameters, 23);
+  if (tnode_uses_sflux_mod(parameters, 23)) {
+    tex += sfluxmod(23, basis, beta_tex, safe_sflux_dffact(parameters, 23), switches);
+  }
+  tex += geomag(p_mag_tex, bf_mag, plg_mag, swg_mag);
+  tex += utdep(p_ut_tex, bf_ut, swg_ut);
+  if (tnode_uses_sflux_mod(parameters, 22)) {
+    tgb0 += sfluxmod(22, basis, beta_tgb0, safe_sflux_dffact(parameters, 22), switches);
+  }
+  tgb0 += geomag(p_mag_tgb0, bf_mag, plg_mag, swg_mag);
+  if (tnode_uses_sflux_mod(parameters, 21)) {
+    tb0 += sfluxmod(21, basis, beta_tb0, safe_sflux_dffact(parameters, 21), switches);
+  }
+  tb0 += geomag(p_mag_tb0, bf_mag, plg_mag, swg_mag);
 
   if (!std::isfinite(tb0) || tb0 < 120.0 || tb0 > 600.0) {
     tb0 = 190.0;

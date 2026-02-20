@@ -14,6 +14,7 @@ add_executable(msis21_tests
   test_parm_reader.cpp
   test_utils.cpp
   test_gfn.cpp
+  test_gfn_nonlinear.cpp
   test_tfn.cpp
   test_dfn.cpp
   test_calc.cpp
