@@ -24,32 +24,34 @@ double alt2gph(double lat_deg, double alt_km) {
   constexpr double a = 6378.1370 * 1e3;
   constexpr double finv = 298.257223563;
   constexpr double w = 7292115e-11;
-  constexpr double gm = 398600.4418 * 1e9;
+  const double gm = static_cast<double>(398600.4418f) * 1.0e9;
 
   constexpr double asq = a * a;
   constexpr double wsq = w * w;
   constexpr double f = 1.0 / finv;
   constexpr double esq = 2.0 * f - f * f;
-  constexpr double e = 0.08181919084262149;
-  constexpr double elin = a * e;
-  constexpr double elinsq = elin * elin;
-  constexpr double epr = e / (1 - f);
+  const double e = std::sqrt(esq);
+  const double elin = a * e;
+  const double elinsq = elin * elin;
+  const double epr = e / (1 - f);
   const double q0 = ((1.0 + 3.0 / (epr * epr)) * std::atan(epr) - 3.0 / epr) / 2.0;
   const double u0 = -gm * std::atan(epr) / elin - wsq * asq / 3.0;
   constexpr double g0 = 9.80665;
-  constexpr double gm_div_elin = gm / elin;
+  const double gm_div_elin = gm / elin;
 
   constexpr double x0sq = 2e7 * 2e7;
   constexpr double hsq = 1.2e7 * 1.2e7;
 
   const double altm = alt_km * 1000.0;
-  const double sinsq = std::pow(std::sin(lat_deg * deg2rad), 2.0);
+  const double sinlat = std::sin(lat_deg * deg2rad);
+  const double sinsq = sinlat * sinlat;
   const double v = a / std::sqrt(1 - esq * sinsq);
-  const double xsq = std::pow(v + altm, 2.0) * (1 - sinsq);
-  const double zsq = std::pow(v * (1 - esq) + altm, 2.0) * sinsq;
+  const double xp = v + altm;
+  const double zp = v * (1 - esq) + altm;
+  const double xsq = xp * xp * (1 - sinsq);
+  const double zsq = zp * zp * sinsq;
   const double rsq_min_elin = xsq + zsq - elinsq;
-  const double usq = rsq_min_elin / 2.0 +
-                     std::sqrt(std::pow(rsq_min_elin, 2.0) / 4.0 + elinsq * zsq);
+  const double usq = rsq_min_elin / 2.0 + std::sqrt((rsq_min_elin * rsq_min_elin) / 4.0 + elinsq * zsq);
   const double cossqdelta = zsq / usq;
 
   const double epru = elin / std::sqrt(usq);
