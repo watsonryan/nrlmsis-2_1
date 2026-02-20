@@ -65,7 +65,3 @@ If you see `ninja: warning: premature end of file; recovering`, reset stale Ninj
 ```bash
 ./tools/reset_ninja_state.sh build/macos-debug
 ```
-
-## Parity Notes
-- As of 2026-02-20, pure C++ parity against the Fortran harness is very tight (`~1e-11` max relative on key species), with atomic oxygen reduced from an earlier `~1.66e+01 cm^-3` max-abs gap to `~2.67e-03 cm^-3`.
-- The `Gfn.AtomicOxygenParityRemainsTight` regression test locks this improvement to prevent drift.
