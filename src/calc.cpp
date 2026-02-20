@@ -164,8 +164,10 @@ std::array<bool, kMaxBasisFunctions> legacy_switches_to_basis(const Options& opt
     set_range(swg, 105, 124, false);
     set_range(swg, 153, 168, false);
     set_range(swg, 197, 200, false);
-    set_range(swg, 205, 216, false);
-    set_range(swg, 259, 270, false);
+    set_range(swg, 205, 208, false);
+    set_range(swg, 213, 216, false);
+    set_range(swg, 259, 262, false);
+    set_range(swg, 267, 270, false);
     set_range(swg, 394, 397, false);
     set_range(swg, 407, 410, false);
     set_range(swg, 422, 425, false);
