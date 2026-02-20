@@ -4,6 +4,7 @@ project(nrlmsis21_cpp VERSION 0.1.0 LANGUAGES CXX)
 
 option(MSIS21_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
 option(MSIS21_ENABLE_FP_STRICT "Enable strict floating-point reproducibility flags" ON)
+option(MSIS21_STRICT_PARITY_CPP "Enable additional strict floating-point flags for parity checks" OFF)
 option(MSIS21_BUILD_TESTS "Build tests" ON)
 option(MSIS21_BUILD_CLI "Build CLI example" ON)
 
@@ -57,6 +58,13 @@ else()
   if(MSIS21_ENABLE_FP_STRICT)
     target_compile_options(msis21 PRIVATE -ffp-contract=off)
   endif()
+  if(MSIS21_STRICT_PARITY_CPP)
+    target_compile_options(msis21 PRIVATE -fno-fast-math -frounding-math)
+  endif()
+endif()
+
+if(MSVC AND MSIS21_STRICT_PARITY_CPP)
+  target_compile_options(msis21 PRIVATE /fp:strict)
 endif()
 
 if(MSIS21_BUILD_TESTS)

@@ -54,6 +54,13 @@
       }
     },
     {
+      "name": "macos-clang-strict-parity",
+      "inherits": "macos-clang-release",
+      "cacheVariables": {
+        "MSIS21_STRICT_PARITY_CPP": "ON"
+      }
+    },
+    {
       "name": "linux-clang-debug",
       "inherits": "base",
       "cacheVariables": {
@@ -87,6 +94,13 @@
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "linux-clang-strict-parity",
+      "inherits": "linux-clang-release",
+      "cacheVariables": {
+        "MSIS21_STRICT_PARITY_CPP": "ON"
       }
     },
     {
@@ -129,16 +143,19 @@
     {"name": "macos-clang-release", "configurePreset": "macos-clang-release"},
     {"name": "macos-clang-sanitize", "configurePreset": "macos-clang-sanitize"},
     {"name": "macos-clang-profile", "configurePreset": "macos-clang-profile"},
+    {"name": "macos-clang-strict-parity", "configurePreset": "macos-clang-strict-parity"},
     {"name": "linux-clang-debug", "configurePreset": "linux-clang-debug"},
     {"name": "linux-clang-release", "configurePreset": "linux-clang-release"},
     {"name": "linux-clang-sanitize", "configurePreset": "linux-clang-sanitize"},
     {"name": "linux-clang-profile", "configurePreset": "linux-clang-profile"},
+    {"name": "linux-clang-strict-parity", "configurePreset": "linux-clang-strict-parity"},
     {"name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug"},
     {"name": "windows-msvc-release", "configurePreset": "windows-msvc-release"},
     {"name": "windows-msvc-sanitize", "configurePreset": "windows-msvc-sanitize"},
     {"name": "windows-msvc-profile", "configurePreset": "windows-msvc-profile"}
   ],
   "testPresets": [
-    {"name": "macos-clang-debug", "configurePreset": "macos-clang-debug", "output": {"outputOnFailure": true}}
+    {"name": "macos-clang-debug", "configurePreset": "macos-clang-debug", "output": {"outputOnFailure": true}},
+    {"name": "macos-clang-strict-parity", "configurePreset": "macos-clang-strict-parity", "output": {"outputOnFailure": true}}
   ]
 }
