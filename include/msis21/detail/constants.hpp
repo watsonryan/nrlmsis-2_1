@@ -39,7 +39,9 @@ inline constexpr double kG0 = 9.80665;
 inline constexpr double kG0DivKb = kG0 / kKb * 1.0e3;
 inline constexpr double kMbar = 28.96546 / (1.0e3 * kNa);
 inline constexpr double kMbarG0DivKb = kMbar * kG0 / kKb * 1.0e3;
-inline constexpr double kLnP0 = 11.515614;
+// Legacy Fortran defines lnP0 without kind suffix, so it is rounded to default
+// REAL(4) before promotion in DBLE mode. Keep that exact value for parity.
+inline constexpr double kLnP0 = 11.515613555908203;
 inline constexpr double kToa = 4000.0;
 inline constexpr double kHoa =
     (kKb * kToa) / ((16.0 / (1.0e3 * kNa)) * kG0) * 1.0e-3;
