@@ -14,6 +14,7 @@ add_executable(msis21_tests
   test_parm_reader.cpp
   test_utils.cpp
   test_gfn.cpp
+  test_tfn.cpp
 )
 
 target_link_libraries(msis21_tests
