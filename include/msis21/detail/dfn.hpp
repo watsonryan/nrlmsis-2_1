@@ -7,6 +7,7 @@
 
 #include <array>
 
+#include "msis21/detail/parm_reader.hpp"
 #include "msis21/detail/tfn.hpp"
 
 namespace msis21::detail {
@@ -50,5 +51,10 @@ struct DnParm {
                           double hrfact,
                           const TnParm& tpro,
                           const DnParm& dpro);
+[[nodiscard]] DnParm dfnparm(int ispec,
+                             const std::array<double, kMaxBasisFunctions>& gf,
+                             const std::array<bool, kMaxBasisFunctions>& swg,
+                             const Parameters& parameters,
+                             const TnParm& tpro);
 
 }  // namespace msis21::detail

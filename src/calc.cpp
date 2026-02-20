@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "msis21/detail/constants.hpp"
+#include "msis21/detail/dfn.hpp"
 #include "msis21/detail/gfn.hpp"
 #include "msis21/detail/log.hpp"
 #include "msis21/detail/parm_reader.hpp"
@@ -50,6 +51,17 @@ EtaTable make_eta_tn() {
     }
   }
   return eta;
+}
+
+double spline_sum_rel(const std::array<double, kNl + 1>& coeff, const BsplineResult& b, int order, int rel_min) {
+  double sum = 0.0;
+  for (int rel = rel_min; rel <= 0; ++rel) {
+    const int idx = b.i + rel;
+    if (idx >= 0 && idx <= kNl) {
+      sum += coeff[static_cast<std::size_t>(idx)] * b.value(rel, order);
+    }
+  }
+  return sum;
 }
 
 void set_range(std::array<bool, kMaxBasisFunctions>& swg, int begin, int end, bool value) {
@@ -213,9 +225,12 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   const double z = alt2gph(in.glat_deg, in.alt_km);
   static const EtaTable eta_tn = make_eta_tn();
   double t = 0.0;
+  BsplineResult bs{};
+  bool have_bs = false;
   if (z < kZetaB) {
     const int kmax = (z < kZetaF) ? 5 : 6;
-    const auto bs = bspline(z, kNodesTN, kNd + 2, kmax, eta_tn);
+    bs = bspline(z, kNodesTN, kNd + 2, kmax, eta_tn);
+    have_bs = true;
     std::array<double, 4> w{};
     w[0] = bs.value(-3, 4);
     w[1] = bs.value(-2, 4);
@@ -229,41 +244,42 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
     t = 120.0;
   }
 
-  const double h_km = (kKb * t) / (kMbar * kG0) * 1e-3;
-  const double pressure_pa = std::exp(kLnP0 - z / h_km);
-  const double n_total_m3 = pressure_pa / (kKb * t);
-  const double n_total_cm3 = n_total_m3 * 1e-6;
-
-  double n2 = n_total_cm3 * std::exp(kLnVmr[1]);
-  double o2 = n_total_cm3 * std::exp(kLnVmr[2]);
-  double he = n_total_cm3 * std::exp(kLnVmr[4]) * std::exp((z - 80.0) / 220.0);
-  double ar = n_total_cm3 * std::exp(kLnVmr[6]);
-
-  double o = kDmissing;
-  if (z >= 72.0) {
-    o = n_total_cm3 * 1e-3 * std::exp((z - 72.0) / 20.0);
-    o = std::min(o, n_total_cm3 * 0.2);
+  const double delz = z - kZetaB;
+  double vz = 0.0;
+  double wz = 0.0;
+  double lndtotz = 0.0;
+  if (z < kZetaF) {
+    if (!have_bs) {
+      bs = bspline(z, kNodesTN, kNd + 2, 5, eta_tn);
+    }
+    vz = spline_sum_rel(tpro.beta, bs, 5, -4) + tpro.cvs;
+    lndtotz = kLnP0 - kMbarG0DivKb * (vz - tpro.vzeta0) - std::log(kKb * t);
+  } else {
+    if (z < kZetaB) {
+      if (!have_bs) {
+        bs = bspline(z, kNodesTN, kNd + 2, 6, eta_tn);
+      }
+      vz = spline_sum_rel(tpro.beta, bs, 5, -4) + tpro.cvs;
+      wz = spline_sum_rel(tpro.gamma, bs, 6, -5) + tpro.cvs * delz + tpro.cws;
+    } else {
+      vz = (delz + std::log(t / tpro.tex) / tpro.sigma) / tpro.tex + tpro.cvb;
+      wz = (0.5 * delz * delz + dilog(tpro.b * std::exp(-tpro.sigma * delz)) / tpro.sigmasq) / tpro.tex +
+           tpro.cvb * delz + tpro.cwb;
+    }
+    const double lnpz = kLnP0 - kMbarG0DivKb * (vz - tpro.vzeta0);
+    lndtotz = lnpz - std::log(kKb * t);
   }
-
-  double h = kDmissing;
-  if (z >= 75.0) {
-    h = n_total_cm3 * 1e-6 * std::exp((z - 75.0) / 45.0);
-  }
-
-  double n = kDmissing;
-  if (z >= 90.0) {
-    n = n_total_cm3 * 1e-5 * std::exp((z - 90.0) / 35.0);
-  }
-
-  double o_anom = kDmissing;
-  if (z >= 100.0 && o > 0.0) {
-    o_anom = o * 0.02;
-  }
-
-  double no = kDmissing;
-  if (z >= 70.0) {
-    no = n_total_cm3 * 1e-7 * std::exp((z - 70.0) / 25.0);
-  }
+  const double hrfact = 0.5 * (1.0 + std::tanh(kHgamma * (z - kZetagamma)));
+  const double n2 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(2, basis, switches, parameters, tpro));
+  const double o2 = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(3, basis, switches, parameters, tpro));
+  const double o = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(4, basis, switches, parameters, tpro));
+  const double he = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(5, basis, switches, parameters, tpro));
+  const double h = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(6, basis, switches, parameters, tpro));
+  const double ar = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(7, basis, switches, parameters, tpro));
+  const double n = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(8, basis, switches, parameters, tpro));
+  const double o_anom =
+      dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(9, basis, switches, parameters, tpro));
+  const double no = dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(10, basis, switches, parameters, tpro));
 
   auto n_cm3_to_m3 = [](double x) { return x <= kDmissing * 10.0 ? 0.0 : x * 1e6; };
   const double rho_kg_m3 =
