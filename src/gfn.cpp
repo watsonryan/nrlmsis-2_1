@@ -252,8 +252,13 @@ std::array<double, kMaxBasisFunctions> GlobeCalculator::globe(
 
 double GlobeCalculator::solzen(double ddd, double lst, double lat, double lon) {
   static constexpr double humr = kPi / 12.0;
-  static constexpr std::array<double, 5> p{0.017203534, 0.034407068, 0.051610602, 0.068814136,
-                                           0.103221204};
+  // Match Fortran source semantics: literals are default REAL then promoted to rp.
+  static constexpr std::array<double, 5> p{
+      static_cast<double>(0.017203534f),
+      static_cast<double>(0.034407068f),
+      static_cast<double>(0.051610602f),
+      static_cast<double>(0.068814136f),
+      static_cast<double>(0.103221204f)};
 
   const double wlon = 360.0 - lon;
   (void)wlon;
