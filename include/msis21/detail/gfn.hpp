@@ -54,14 +54,32 @@ class GlobeCalculator {
     double dffact,
     const std::array<bool, kMaxBasisFunctions>& swg);
 
+[[nodiscard]] double sfluxmod_raw(
+    int iz,
+    const std::array<double, kMaxBasisFunctions>& gf,
+    const double* beta_col,
+    double dffact,
+    const std::array<bool, kMaxBasisFunctions>& swg);
+
 [[nodiscard]] double geomag(
     const std::array<double, kNmag>& p0,
     const std::array<double, 13>& bf,
     const std::array<double, 14>& plg,
     const std::array<bool, kNmag>& swg_mag);
 
+[[nodiscard]] double geomag_raw(
+    const double* p0,
+    const std::array<double, 13>& bf,
+    const std::array<double, 14>& plg,
+    const std::array<bool, kNmag>& swg_mag);
+
 [[nodiscard]] double utdep(
     const std::array<double, kNut>& p0,
+    const std::array<double, 9>& bf,
+    const std::array<bool, kNut>& swg_ut);
+
+[[nodiscard]] double utdep_raw(
+    const double* p0,
     const std::array<double, 9>& bf,
     const std::array<bool, kNut>& swg_ut);
 

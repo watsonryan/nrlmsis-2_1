@@ -29,12 +29,8 @@ double linear_dot(const Parameters& parameters, const std::array<double, kMaxBas
   return sum;
 }
 
-std::array<double, kMaxBasisFunctions> column_beta(const Parameters& parameters, int col) {
-  std::array<double, kMaxBasisFunctions> out{};
-  for (int row = 0; row < static_cast<int>(kMaxBasisFunctions); ++row) {
-    out[static_cast<std::size_t>(row)] = beta_at(parameters, row, col);
-  }
-  return out;
+const double* column_beta_ptr(const Parameters& parameters, int col) {
+  return &parameters.beta[static_cast<std::size_t>(col) * parameters.rows];
 }
 
 bool smod_enabled(const Parameters& parameters, int col) {
@@ -78,22 +74,6 @@ std::array<double, 9> ut_bf_slice(const std::array<double, kMaxBasisFunctions>& 
   std::array<double, 9> out{};
   for (int i = 0; i < 9; ++i) {
     out[static_cast<std::size_t>(i)] = basis[static_cast<std::size_t>(kCut + i)];
-  }
-  return out;
-}
-
-std::array<double, kNmag> geomag_params_for_col(const Parameters& parameters, int col) {
-  std::array<double, kNmag> out{};
-  for (int i = 0; i < kNmag; ++i) {
-    out[static_cast<std::size_t>(i)] = beta_at(parameters, kCmag + i, col);
-  }
-  return out;
-}
-
-std::array<double, kNut> ut_params_for_col(const Parameters& parameters, int col) {
-  std::array<double, kNut> out{};
-  for (int i = 0; i < kNut; ++i) {
-    out[static_cast<std::size_t>(i)] = beta_at(parameters, kCut + i, col);
   }
   return out;
 }
@@ -145,9 +125,8 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
   }
   for (int ix = 0; ix <= (kItb0 - 1); ++ix) {
     if (smod_enabled(parameters, ix)) {
-      const auto beta_col = column_beta(parameters, ix);
-      tpro.cf[static_cast<std::size_t>(ix)] +=
-          sfluxmod(ix, gf, beta_col, 1.0 / beta_at(parameters, 0, ix), swg);
+      tpro.cf[static_cast<std::size_t>(ix)] += sfluxmod_raw(
+          ix, gf, column_beta_ptr(parameters, ix), 1.0 / beta_at(parameters, 0, ix), swg);
     }
   }
 
@@ -155,9 +134,6 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
   tpro.tgb0 = linear_dot(parameters, gf, kItgb0);
   tpro.tb0 = linear_dot(parameters, gf, kItb0);
 
-  const auto beta_tex = column_beta(parameters, kItex);
-  const auto beta_tgb0 = column_beta(parameters, kItgb0);
-  const auto beta_tb0 = column_beta(parameters, kItb0);
   const auto bf_mag = geomag_bf_slice(gf);
   const auto plg_mag = geomag_plg_slice(gf);
   const auto bf_ut = ut_bf_slice(gf);
@@ -170,19 +146,23 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
     swg_ut[static_cast<std::size_t>(i)] = swg[static_cast<std::size_t>(kCut + i)];
   }
 
-  tpro.tex += sfluxmod(kItex, gf, beta_tex, 1.0 / beta_at(parameters, 0, kItex), swg);
-  tpro.tex += geomag(geomag_params_for_col(parameters, kItex), bf_mag, plg_mag, swg_mag);
-  tpro.tex += utdep(ut_params_for_col(parameters, kItex), bf_ut, swg_ut);
+  tpro.tex += sfluxmod_raw(kItex, gf, column_beta_ptr(parameters, kItex), 1.0 / beta_at(parameters, 0, kItex), swg);
+  tpro.tex += geomag_raw(column_beta_ptr(parameters, kItex) + static_cast<std::size_t>(kCmag), bf_mag, plg_mag, swg_mag);
+  tpro.tex += utdep_raw(column_beta_ptr(parameters, kItex) + static_cast<std::size_t>(kCut), bf_ut, swg_ut);
 
   if (smod_enabled(parameters, kItgb0)) {
-    tpro.tgb0 += sfluxmod(kItgb0, gf, beta_tgb0, 1.0 / beta_at(parameters, 0, kItgb0), swg);
+    tpro.tgb0 += sfluxmod_raw(
+        kItgb0, gf, column_beta_ptr(parameters, kItgb0), 1.0 / beta_at(parameters, 0, kItgb0), swg);
   }
-  tpro.tgb0 += geomag(geomag_params_for_col(parameters, kItgb0), bf_mag, plg_mag, swg_mag);
+  tpro.tgb0 +=
+      geomag_raw(column_beta_ptr(parameters, kItgb0) + static_cast<std::size_t>(kCmag), bf_mag, plg_mag, swg_mag);
 
   if (smod_enabled(parameters, kItb0)) {
-    tpro.tb0 += sfluxmod(kItb0, gf, beta_tb0, 1.0 / beta_at(parameters, 0, kItb0), swg);
+    tpro.tb0 += sfluxmod_raw(
+        kItb0, gf, column_beta_ptr(parameters, kItb0), 1.0 / beta_at(parameters, 0, kItb0), swg);
   }
-  tpro.tb0 += geomag(geomag_params_for_col(parameters, kItb0), bf_mag, plg_mag, swg_mag);
+  tpro.tb0 +=
+      geomag_raw(column_beta_ptr(parameters, kItb0) + static_cast<std::size_t>(kCmag), bf_mag, plg_mag, swg_mag);
   tpro.sigma = tpro.tgb0 / (tpro.tex - tpro.tb0);
 
   const auto bc = continuity_coefficients(tpro.tex, tpro.tgb0, tpro.tb0);

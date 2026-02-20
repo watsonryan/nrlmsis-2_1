@@ -43,30 +43,17 @@ double subset_linear_dot(const Parameters& parameters,
   return sum;
 }
 
-std::array<double, kMaxBasisFunctions> subset_column_beta(const Parameters& parameters,
-                                                          int subset_start,
-                                                          int col_local) {
-  std::array<double, kMaxBasisFunctions> out{};
-  for (int row = 0; row < static_cast<int>(kMaxBasisFunctions); ++row) {
-    out[static_cast<std::size_t>(row)] = subset_beta_at(parameters, subset_start, row, col_local);
-  }
-  return out;
+const double* subset_column_beta_ptr(const Parameters& parameters, int subset_start, int col_local) {
+  const int col = subset_start + col_local;
+  return &parameters.beta[static_cast<std::size_t>(col) * parameters.rows];
 }
 
-std::array<double, kNmag> subset_geomag_params(const Parameters& parameters, int subset_start, int col_local) {
-  std::array<double, kNmag> p{};
-  for (int i = 0; i < kNmag; ++i) {
-    p[static_cast<std::size_t>(i)] = subset_beta_at(parameters, subset_start, kCmag + i, col_local);
-  }
-  return p;
+const double* subset_geomag_params_ptr(const Parameters& parameters, int subset_start, int col_local) {
+  return subset_column_beta_ptr(parameters, subset_start, col_local) + static_cast<std::size_t>(kCmag);
 }
 
-std::array<double, kNut> subset_ut_params(const Parameters& parameters, int subset_start, int col_local) {
-  std::array<double, kNut> p{};
-  for (int i = 0; i < kNut; ++i) {
-    p[static_cast<std::size_t>(i)] = subset_beta_at(parameters, subset_start, kCut + i, col_local);
-  }
-  return p;
+const double* subset_ut_params_ptr(const Parameters& parameters, int subset_start, int col_local) {
+  return subset_column_beta_ptr(parameters, subset_start, col_local) + static_cast<std::size_t>(kCut);
 }
 
 std::array<double, 13> geomag_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
@@ -276,9 +263,9 @@ DnParm dfnparm(int ispec,
 
   auto dyn_terms = [&](int subset_start, int col_local, double sflux_fact) {
     double r = subset_linear_dot(parameters, subset_start, col_local, gf);
-    r += sfluxmod(col_local, gf, subset_column_beta(parameters, subset_start, col_local), sflux_fact, swg);
-    r += geomag(subset_geomag_params(parameters, subset_start, col_local), bf_mag, plg_mag, swg_mag);
-    r += utdep(subset_ut_params(parameters, subset_start, col_local), bf_ut, swg_ut);
+    r += sfluxmod_raw(col_local, gf, subset_column_beta_ptr(parameters, subset_start, col_local), sflux_fact, swg);
+    r += geomag_raw(subset_geomag_params_ptr(parameters, subset_start, col_local), bf_mag, plg_mag, swg_mag);
+    r += utdep_raw(subset_ut_params_ptr(parameters, subset_start, col_local), bf_ut, swg_ut);
     return r;
   };
 
@@ -306,7 +293,7 @@ DnParm dfnparm(int ispec,
       dpro.hml = subset_beta_at(parameters, kO2Start, 0, 2);
       dpro.hmu = subset_beta_at(parameters, kO2Start, 0, 3);
       dpro.r = subset_linear_dot(parameters, kO2Start, 7, gf);
-      dpro.r += geomag(subset_geomag_params(parameters, kO2Start, 7), bf_mag, plg_mag, swg_mag);
+      dpro.r += geomag_raw(subset_geomag_params_ptr(parameters, kO2Start, 7), bf_mag, plg_mag, swg_mag);
       dpro.zeta_r = subset_beta_at(parameters, kO2Start, 0, 8);
       dpro.hr = subset_beta_at(parameters, kO2Start, 0, 9);
       break;
@@ -363,16 +350,16 @@ DnParm dfnparm(int ispec,
       dpro.hml = subset_beta_at(parameters, kArStart, 0, 2);
       dpro.hmu = subset_beta_at(parameters, kArStart, 0, 3);
       dpro.r = subset_linear_dot(parameters, kArStart, 7, gf);
-      dpro.r += geomag(subset_geomag_params(parameters, kArStart, 7), bf_mag, plg_mag, swg_mag);
-      dpro.r += utdep(subset_ut_params(parameters, kArStart, 7), bf_ut, swg_ut);
+      dpro.r += geomag_raw(subset_geomag_params_ptr(parameters, kArStart, 7), bf_mag, plg_mag, swg_mag);
+      dpro.r += utdep_raw(subset_ut_params_ptr(parameters, kArStart, 7), bf_ut, swg_ut);
       dpro.zeta_r = subset_beta_at(parameters, kArStart, 0, 8);
       dpro.hr = subset_beta_at(parameters, kArStart, 0, 9);
       break;
     case 8:
       dpro.lndref = subset_linear_dot(parameters, kN1Start, 0, gf);
-      dpro.lndref += sfluxmod(0, gf, subset_column_beta(parameters, kN1Start, 0), 0.0, swg);
-      dpro.lndref += geomag(subset_geomag_params(parameters, kN1Start, 0), bf_mag, plg_mag, swg_mag);
-      dpro.lndref += utdep(subset_ut_params(parameters, kN1Start, 0), bf_ut, swg_ut);
+      dpro.lndref += sfluxmod_raw(0, gf, subset_column_beta_ptr(parameters, kN1Start, 0), 0.0, swg);
+      dpro.lndref += geomag_raw(subset_geomag_params_ptr(parameters, kN1Start, 0), bf_mag, plg_mag, swg_mag);
+      dpro.lndref += utdep_raw(subset_ut_params_ptr(parameters, kN1Start, 0), bf_ut, swg_ut);
       dpro.zref = kZetaB;
       dpro.zmin = 90.0;
       dpro.zhyd = kZetaF;
@@ -388,7 +375,7 @@ DnParm dfnparm(int ispec,
       break;
     case 9:
       dpro.lndref = subset_linear_dot(parameters, kOaStart, 0, gf);
-      dpro.lndref += geomag(subset_geomag_params(parameters, kOaStart, 0), bf_mag, plg_mag, swg_mag);
+      dpro.lndref += geomag_raw(subset_geomag_params_ptr(parameters, kOaStart, 0), bf_mag, plg_mag, swg_mag);
       dpro.zref = kZetaB;
       dpro.zmin = 120.0;
       dpro.zhyd = 0.0;
@@ -402,7 +389,7 @@ DnParm dfnparm(int ispec,
         return dpro;
       }
       dpro.lndref = subset_linear_dot(parameters, kNoStart, 0, gf);
-      dpro.lndref += geomag(subset_geomag_params(parameters, kNoStart, 0), bf_mag, plg_mag, swg_mag);
+      dpro.lndref += geomag_raw(subset_geomag_params_ptr(parameters, kNoStart, 0), bf_mag, plg_mag, swg_mag);
       dpro.zref = kZetaB;
       dpro.zmin = 72.5;
       dpro.zhyd = kZetaB;
@@ -410,7 +397,7 @@ DnParm dfnparm(int ispec,
       dpro.hml = subset_linear_dot(parameters, kNoStart, 2, gf);
       dpro.hmu = subset_linear_dot(parameters, kNoStart, 3, gf);
       dpro.c = subset_linear_dot(parameters, kNoStart, 4, gf);
-      dpro.c += geomag(subset_geomag_params(parameters, kNoStart, 4), bf_mag, plg_mag, swg_mag);
+      dpro.c += geomag_raw(subset_geomag_params_ptr(parameters, kNoStart, 4), bf_mag, plg_mag, swg_mag);
       dpro.zeta_c = subset_linear_dot(parameters, kNoStart, 5, gf);
       dpro.hc = subset_linear_dot(parameters, kNoStart, 6, gf);
       dpro.r = subset_linear_dot(parameters, kNoStart, 7, gf);
@@ -503,7 +490,7 @@ DnParm dfnparm(int ispec,
     for (int izf = 0; izf <= (kNsplNo - 1); ++izf) {
       dpro.cf[static_cast<std::size_t>(izf)] = subset_linear_dot(parameters, kNoStart, izf + 10, gf);
       dpro.cf[static_cast<std::size_t>(izf)] +=
-          geomag(subset_geomag_params(parameters, kNoStart, izf + 10), bf_mag, plg_mag, swg_mag);
+          geomag_raw(subset_geomag_params_ptr(parameters, kNoStart, izf + 10), bf_mag, plg_mag, swg_mag);
     }
     const double cterm = dpro.c * std::exp(-(dpro.zref - dpro.zeta_c) / dpro.hc);
     const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (kHRfactNOref * dpro.hr));

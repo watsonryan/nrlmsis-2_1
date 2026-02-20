@@ -296,11 +296,11 @@ double g0fn(double a, double k00r, double k00s) {
 
 }  // namespace
 
-double sfluxmod(int iz,
-                const std::array<double, kMaxBasisFunctions>& gf,
-                const std::array<double, kMaxBasisFunctions>& beta_col,
-                double dffact,
-                const std::array<bool, kMaxBasisFunctions>& swg) {
+double sfluxmod_raw(int iz,
+                    const std::array<double, kMaxBasisFunctions>& gf,
+                    const double* beta_col,
+                    double dffact,
+                    const std::array<bool, kMaxBasisFunctions>& swg) {
   const auto smod_term = [&](int idx) { return swg[static_cast<std::size_t>(idx)] ? 1.0 : 0.0; };
 
   const double df_terms = (beta_col[static_cast<std::size_t>(kCsfx + 2)] *
@@ -344,15 +344,24 @@ double sfluxmod(int iz,
   return sum;
 }
 
-double geomag(const std::array<double, kNmag>& p0,
-              const std::array<double, 13>& bf,
-              const std::array<double, 14>& plg_flat,
-              const std::array<bool, kNmag>& swg_mag) {
+double sfluxmod(int iz,
+                const std::array<double, kMaxBasisFunctions>& gf,
+                const std::array<double, kMaxBasisFunctions>& beta_col,
+                double dffact,
+                const std::array<bool, kMaxBasisFunctions>& swg) {
+  return sfluxmod_raw(iz, gf, beta_col.data(), dffact, swg);
+}
+
+double geomag_raw(const double* p0,
+                  const std::array<double, 13>& bf,
+                  const std::array<double, 14>& plg_flat,
+                  const std::array<bool, kNmag>& swg_mag) {
   if (!(swg_mag[0] || swg_mag[1])) {
     return 0.0;
   }
 
-  std::array<double, kNmag> p = p0;
+  std::array<double, kNmag> p{};
+  std::copy_n(p0, static_cast<std::size_t>(kNmag), p.data());
   auto plg = [&](int n, int m) -> double { return plg_flat[static_cast<std::size_t>(n + 7 * m)]; };
 
   if (swg_mag[0] == swg_mag[1]) {
@@ -412,10 +421,18 @@ double geomag(const std::array<double, kNmag>& p0,
   return gmag * del_a;
 }
 
-double utdep(const std::array<double, kNut>& p0,
-             const std::array<double, 9>& bf,
-             const std::array<bool, kNut>& swg_ut) {
-  std::array<double, kNut> p = p0;
+double geomag(const std::array<double, kNmag>& p0,
+              const std::array<double, 13>& bf,
+              const std::array<double, 14>& plg_flat,
+              const std::array<bool, kNmag>& swg_mag) {
+  return geomag_raw(p0.data(), bf, plg_flat, swg_mag);
+}
+
+double utdep_raw(const double* p0,
+                 const std::array<double, 9>& bf,
+                 const std::array<bool, kNut>& swg_ut) {
+  std::array<double, kNut> p{};
+  std::copy_n(p0, static_cast<std::size_t>(kNut), p.data());
   for (int i = 3; i < kNut; ++i) {
     if (!swg_ut[static_cast<std::size_t>(i)]) {
       p[static_cast<std::size_t>(i)] = 0.0;
@@ -426,6 +443,12 @@ double utdep(const std::array<double, kNut>& p0,
              (p[6] * bf[4] + p[7] * bf[5] + p[8] * bf[6]) +
          std::cos(bf[0] - p[2] + 2.0 * bf[3]) * (p[9] * bf[7] + p[10] * bf[8]) *
              (1.0 + p[11] * bf[2]);
+}
+
+double utdep(const std::array<double, kNut>& p0,
+             const std::array<double, 9>& bf,
+             const std::array<bool, kNut>& swg_ut) {
+  return utdep_raw(p0.data(), bf, swg_ut);
 }
 
 }  // namespace msis21::detail
