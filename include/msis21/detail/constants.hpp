@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include <array>
 #include <cstddef>
 
 namespace msis21::detail {
@@ -36,10 +37,34 @@ inline constexpr double kKb = 1.380649e-23;
 inline constexpr double kNa = 6.02214076e23;
 inline constexpr double kG0 = 9.80665;
 inline constexpr double kG0DivKb = kG0 / kKb * 1.0e3;
+inline constexpr double kMbar = 28.96546 / (1.0e3 * kNa);
+inline constexpr double kLnP0 = 11.515614;
 inline constexpr double kToa = 4000.0;
 inline constexpr double kHoa =
     (kKb * kToa) / ((16.0 / (1.0e3 * kNa)) * kG0) * 1.0e-3;
 inline constexpr double kDmissing = 9.999e-38;
+inline constexpr std::array<double, 10> kSpecMass = {
+    0.0,
+    28.0134 / (1.0e3 * kNa),
+    31.9988 / (1.0e3 * kNa),
+    (31.9988 / 2.0) / (1.0e3 * kNa),
+    4.0 / (1.0e3 * kNa),
+    1.0 / (1.0e3 * kNa),
+    39.948 / (1.0e3 * kNa),
+    (28.0134 / 2.0) / (1.0e3 * kNa),
+    (31.9988 / 2.0) / (1.0e3 * kNa),
+    ((28.0134 + 31.9988) / 2.0) / (1.0e3 * kNa)};
+inline constexpr std::array<double, 10> kLnVmr = {
+    0.0,
+    -0.24761117736068058,   // log(0.780848)
+    -1.5636747483373928,    // log(0.209390)
+    0.0,
+    -12.166261147689273,    // log(5.2e-6)
+    0.0,
+    -4.6746949312123634,    // log(0.009332)
+    0.0,
+    0.0,
+    0.0};
 inline constexpr int kMbf = 383;
 inline constexpr int kMaxLegendreDegree = 6;
 inline constexpr int kAmaxN = 6;
