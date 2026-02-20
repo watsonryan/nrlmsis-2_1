@@ -1,3 +1,37 @@
 # NRLMSIS 2.1 C++20 Port
 
-Work-in-progress C++20 port of NRLMSIS 2.1 Fortran reference implementation.
+C++20 port and integration layer for NRLMSIS 2.1 with deterministic build presets and reference-parity validation.
+
+## Architecture
+```mermaid
+flowchart LR
+  A[Input: iyd/sec/alt/lat/lon/f107/ap] --> B[msis21::Model]
+  B --> C[detail::calc]
+  C --> D[Fortran reference backend gtd8d]
+  D --> E[Output: He O N2 O2 Ar rho H N O* NO T]
+  C --> F[Golden tests]
+  F --> G[msis2.1_test_ref_dp.txt]
+```
+
+## Build and Test
+```bash
+cmake --preset macos-clang-debug
+cmake --build --preset macos-clang-debug
+ctest --preset macos-clang-debug --output-on-failure
+```
+
+## Examples
+Single-point query:
+```bash
+./build/macos-clang-debug/msis21_cli 70178 64800 400 0 0 12 150 150 4
+```
+
+Density/AO profile from 2000 km to 250 km in g/cm^3:
+```bash
+./build/macos-clang-debug/msis21_profile_cli 2000 250 25
+```
+Columns:
+- `alt_km`
+- `rho_g_cm3` (total mass density)
+- `ao_g_cm3` (anomalous oxygen partial mass density)
+- `status`
