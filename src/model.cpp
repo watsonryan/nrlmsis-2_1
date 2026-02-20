@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "msis21/detail/calc.hpp"
-#include "msis21/detail/fortran_backend.hpp"
 #include "msis21/detail/log.hpp"
 #include "msis21/detail/parm_reader.hpp"
 #include <spdlog/spdlog.h>
@@ -24,11 +23,6 @@ Model Model::load_from_file(const std::filesystem::path& parm_path, Options opti
   if (status != Status::Ok) {
     spdlog::error("Parameter load failed with status {}", static_cast<int>(status));
     return Model(status, nullptr, std::move(options));
-  }
-  const Status fortran_status = detail::initialize_fortran_backend(parm_path);
-  if (fortran_status != Status::Ok) {
-    spdlog::error("Fortran backend init failed with status {}", static_cast<int>(fortran_status));
-    return Model(fortran_status, nullptr, std::move(options));
   }
   spdlog::info("msis21 model initialized");
   return Model(Status::Ok, parameters, std::move(options));
@@ -45,6 +39,23 @@ Result Model::evaluate(const Input& input, Scratch& /*scratch*/) const noexcept 
   }
   const auto calc = detail::evaluate_msiscalc(input, options_, *parameters_);
   return Result{.status = calc.status, .out = calc.out};
+}
+
+Status Model::evaluate_batch(std::span<const Input> in, std::span<Output> out) const noexcept {
+  if (init_status_ != Status::Ok || !parameters_) {
+    return init_status_;
+  }
+  if (in.size() != out.size()) {
+    return Status::InvalidInput;
+  }
+  for (std::size_t i = 0; i < in.size(); ++i) {
+    const auto res = evaluate(in[i]);
+    if (res.status != Status::Ok) {
+      return res.status;
+    }
+    out[i] = res.out;
+  }
+  return Status::Ok;
 }
 
 }  // namespace msis21

@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "msis21/detail/constants.hpp"
-#include "msis21/detail/fortran_backend.hpp"
 #include "msis21/detail/gfn.hpp"
 #include "msis21/detail/log.hpp"
 #include "msis21/detail/parm_reader.hpp"
@@ -192,9 +191,6 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   if (!validate_input(in)) {
     spdlog::warn("Invalid input for evaluate: iyd={} sec={} alt_km={}", in.iyd, in.sec, in.alt_km);
     return CalcResult{.status = Status::InvalidInput};
-  }
-  if (fortran_backend_available()) {
-    return evaluate_fortran_backend(in);
   }
   if (parameters.rows != kMaxBasisFunctions || parameters.cols != kParmColumnCount) {
     return CalcResult{.status = Status::ParmFileFormatError};

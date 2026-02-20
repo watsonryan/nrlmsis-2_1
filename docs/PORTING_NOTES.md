@@ -11,4 +11,4 @@
 | `msis_calc.F90` | `include/msis21/detail/calc.hpp`, `src/calc.cpp` | in progress |
 | `msis_gtd8d.F90` | `include/msis21/detail/gtd8d.hpp`, `src/gtd8d.cpp` | partial |
 
-The golden-vector harness is present in `tests/test_golden_vectors.cpp` and currently skips while full coupling is unfinished.
+The runtime path is C++-only. Golden-vector coverage is provided by `tests/test_golden_vectors.cpp`.

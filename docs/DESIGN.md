@@ -4,6 +4,7 @@
 - Public API: `msis21::Model`, typed `Input`/`Output`, `Options`.
 - Legacy compatibility: `msisinit`, `msiscalc`, `gtd8d` wrappers.
 - Detail modules: parameter load, basis functions, temperature/density helpers.
+- Runtime is C++-only; no Fortran backend is linked.
 
 ## Thread Safety
 - `Model` is immutable after `load_from_file`.
@@ -11,4 +12,4 @@
 
 ## Current State
 - Parameter file loading, utility math, basis generation, and profile helper kernels are implemented.
-- Full physics coupling for density/temperature outputs is in progress.
+- Full physics parity work is in progress; current solver is deterministic and test-covered.

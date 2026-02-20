@@ -7,6 +7,7 @@
 
 #include <filesystem>
 #include <memory>
+#include <span>
 
 #include "msis21/options.hpp"
 #include "msis21/status.hpp"
@@ -32,6 +33,7 @@ class Model {
   class Scratch {};
 
   [[nodiscard]] Result evaluate(const Input& input, Scratch& scratch) const noexcept;
+  Status evaluate_batch(std::span<const Input> in, std::span<Output> out) const noexcept;
 
  private:
   explicit Model(Status status, std::shared_ptr<const detail::Parameters> parameters, Options options)

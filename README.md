@@ -7,7 +7,7 @@ C++20 port and integration layer for NRLMSIS 2.1 with deterministic build preset
 flowchart LR
   A[Input: iyd/sec/alt/lat/lon/f107/ap] --> B[msis21::Model]
   B --> C[detail::calc]
-  C --> D[Fortran reference backend gtd8d]
+  C --> D[detail::gfn/tfn/dfn]
   D --> E[Output: He O N2 O2 Ar rho H N O* NO T]
   C --> F[Golden tests]
   F --> G[msis2.1_test_ref_dp.txt]
