@@ -4,7 +4,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FORTRAN_DIR="${1:-/Users/rmw/Documents/code/old_NRL}"
-BUILD_DIR="${ROOT_DIR}/build/macos-clang-debug"
+BUILD_PRESET="${BUILD_PRESET:-macos-clang-debug}"
+BUILD_DIR="${ROOT_DIR}/build/${BUILD_PRESET}"
 TMP_DIR="${TMPDIR:-/tmp}/msis_parity.$$"
 mkdir -p "${TMP_DIR}"
 trap 'rm -rf "${TMP_DIR}"' EXIT
@@ -61,7 +62,9 @@ EOF
 
 cp -f "${FORTRAN_DIR}/msis21.parm" "${TMP_DIR}/msis21.parm"
 
-cmake --build --preset macos-clang-debug -j >/dev/null
+"${ROOT_DIR}/tools/reset_ninja_state.sh" "${BUILD_DIR}"
+cmake --preset "${BUILD_PRESET}" >/dev/null
+cmake --build --preset "${BUILD_PRESET}" -j >/dev/null
 
 INPUT_FILE="${ROOT_DIR}/data/msis2.1_test_in.txt"
 FORTRAN_OUT="${TMP_DIR}/fortran.txt"

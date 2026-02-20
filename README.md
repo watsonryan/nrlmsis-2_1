@@ -20,6 +20,13 @@ cmake --build --preset macos-clang-debug
 ctest --preset macos-clang-debug --output-on-failure
 ```
 
+Strict C++ parity profile:
+```bash
+cmake --preset macos-clang-strict-parity
+cmake --build --preset macos-clang-strict-parity
+ctest --preset macos-clang-strict-parity --output-on-failure
+```
+
 ## Logging and Printing
 - Runtime logging uses `spdlog`.
 - CLI/output formatting uses `fmt`.
@@ -51,4 +58,10 @@ MPLCONFIGDIR=/tmp/mpl python3 examples/plot_msis_profile.py \
   --cli build/macos-clang-debug/msis21_profile_cli \
   --start-km 2000 --end-km 250 --step-km 25 \
   --output docs/figures/msis_profile_2000_250.png
+```
+
+## Troubleshooting
+If you see `ninja: warning: premature end of file; recovering`, reset stale Ninja metadata:
+```bash
+./tools/reset_ninja_state.sh build/macos-clang-debug
 ```
