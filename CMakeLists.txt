@@ -16,7 +16,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
 CPMAddPackage(
   NAME fmt
   GITHUB_REPOSITORY fmtlib/fmt
-  VERSION 10.2.1
+  GIT_TAG 10.2.1
 )
 CPMAddPackage(
   NAME spdlog
