@@ -18,6 +18,7 @@ add_executable(msis21_tests
   test_dfn.cpp
   test_calc.cpp
   test_gtd8d.cpp
+  test_golden_vectors.cpp
 )
 
 target_link_libraries(msis21_tests
