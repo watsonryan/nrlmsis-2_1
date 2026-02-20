@@ -31,14 +31,15 @@ class Model {
 
   class Scratch {};
 
- [[nodiscard]] Result evaluate(const Input& input, Scratch& scratch) const noexcept;
+  [[nodiscard]] Result evaluate(const Input& input, Scratch& scratch) const noexcept;
 
  private:
-  explicit Model(Status status, std::shared_ptr<const detail::Parameters> parameters)
-      : init_status_(status), parameters_(std::move(parameters)) {}
+  explicit Model(Status status, std::shared_ptr<const detail::Parameters> parameters, Options options)
+      : init_status_(status), parameters_(std::move(parameters)), options_(std::move(options)) {}
 
   Status init_status_{Status::NotInitialized};
   std::shared_ptr<const detail::Parameters> parameters_{};
+  Options options_{};
 };
 
 }  // namespace msis21
