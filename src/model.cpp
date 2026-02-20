@@ -21,7 +21,7 @@ Model Model::load_from_file(const std::filesystem::path& parm_path, Options opti
   auto parameters = std::make_shared<detail::Parameters>();
   const Status status = detail::load_parameters(parm_path, *parameters);
   if (status != Status::Ok) {
-    spdlog::error("Parameter load failed with status {}", static_cast<int>(status));
+    spdlog::error("Parameter load failed with status {} ({})", status_to_string(status), static_cast<int>(status));
     return Model(status, nullptr, std::move(options));
   }
   spdlog::info("msis21 model initialized");

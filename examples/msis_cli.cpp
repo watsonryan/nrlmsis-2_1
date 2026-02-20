@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
 
   auto model = msis21::Model::load_from_file("data/msis21.parm", msis21::Options{});
   const auto out = model.evaluate(in);
-  fmt::print("status={}\n", static_cast<int>(out.status));
+  fmt::print("status={}({})\n", msis21::status_to_string(out.status), static_cast<int>(out.status));
   fmt::print(
              "he={:.16e} o={:.16e} n2={:.16e} o2={:.16e} ar={:.16e} rho={:.16e} "
              "h={:.16e} n={:.16e} oa={:.16e} no={:.16e} t={:.16e}\n",
