@@ -35,3 +35,11 @@ Columns:
 - `rho_g_cm3` (total mass density)
 - `ao_g_cm3` (anomalous oxygen partial mass density)
 - `status`
+
+Generate a plot (similar workflow to DTM-style profile plots):
+```bash
+MPLCONFIGDIR=/tmp/mpl python3 examples/plot_msis_profile.py \
+  --cli build/macos-clang-debug/msis21_profile_cli \
+  --start-km 2000 --end-km 250 --step-km 25 \
+  --output docs/figures/msis_profile_2000_250.png
+```
