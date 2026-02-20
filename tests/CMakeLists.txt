@@ -15,6 +15,7 @@ add_executable(msis21_tests
   test_utils.cpp
   test_gfn.cpp
   test_tfn.cpp
+  test_dfn.cpp
 )
 
 target_link_libraries(msis21_tests
