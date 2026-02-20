@@ -11,7 +11,12 @@
 namespace msis21 {
 
 Model Model::load_from_file(const std::filesystem::path& parm_path, Options /*options*/) {
-  return Model(detail::validate_parm_file(parm_path));
+  auto parameters = std::make_shared<detail::Parameters>();
+  const Status status = detail::load_parameters(parm_path, *parameters);
+  if (status != Status::Ok) {
+    return Model(status, nullptr);
+  }
+  return Model(Status::Ok, parameters);
 }
 
 Result Model::evaluate(const Input& input) const noexcept {
@@ -20,7 +25,10 @@ Result Model::evaluate(const Input& input) const noexcept {
 }
 
 Result Model::evaluate(const Input& /*input*/, Scratch& /*scratch*/) const noexcept {
-  return Result{.status = init_status_};
+  if (init_status_ != Status::Ok || !parameters_) {
+    return Result{.status = init_status_};
+  }
+  return Result{.status = Status::Ok};
 }
 
 }  // namespace msis21
