@@ -244,9 +244,6 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   } else {
     t = tpro.tex - (tpro.tex - tpro.tb0) * std::exp(-tpro.sigma * (z - kZetaB));
   }
-  if (!std::isfinite(t) || t < 120.0) {
-    t = 120.0;
-  }
 
   const double delz = z - kZetaB;
   double vz = 0.0;
@@ -286,13 +283,13 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   const double no_m3 =
       dfnx(z, t, lndtotz, vz, wz, hrfact, tpro, dfnparm(10, basis, switches, parameters, tpro));
 
-  auto safe_m3 = [](double x) { return x <= kDmissing * 10.0 ? 0.0 : x; };
+  auto safe_m3 = [](double x) { return x == kDmissing ? 0.0 : x; };
   const double rho_kg_m3 =
       safe_m3(n2_m3) * kSpecMass[1] + safe_m3(o2_m3) * kSpecMass[2] + safe_m3(o_m3) * kSpecMass[3] +
       safe_m3(he_m3) * kSpecMass[4] + safe_m3(h_m3) * kSpecMass[5] + safe_m3(ar_m3) * kSpecMass[6] +
       safe_m3(n_m3) * kSpecMass[7] + safe_m3(o_anom_m3) * kSpecMass[8];
   const double rho_g_cm3 = rho_kg_m3 * 1e-3;
-  auto m3_to_cm3 = [](double x) { return x <= kDmissing * 10.0 ? kDmissing : x * 1.0e-6; };
+  auto m3_to_cm3 = [](double x) { return x == kDmissing ? kDmissing : x * 1.0e-6; };
   const double he = m3_to_cm3(he_m3);
   const double o = m3_to_cm3(o_m3);
   const double n2 = m3_to_cm3(n2_m3);

@@ -58,14 +58,6 @@ double dot5(const std::array<double, kNl + 1>& v, int start, const std::array<do
          v[static_cast<std::size_t>(start + 4)] * w[4];
 }
 
-double safe_sflux_dffact(const Parameters& parameters, int col) {
-  const double b0 = beta_at(parameters, 0, col);
-  if (!std::isfinite(b0) || std::abs(b0) < 1e-12) {
-    return 0.0;
-  }
-  return 1.0 / b0;
-}
-
 std::array<double, 13> geomag_bf_slice(const std::array<double, kMaxBasisFunctions>& basis) {
   std::array<double, 13> out{};
   for (int i = 0; i < 13; ++i) {
@@ -155,7 +147,7 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
     if (smod_enabled(parameters, ix)) {
       const auto beta_col = column_beta(parameters, ix);
       tpro.cf[static_cast<std::size_t>(ix)] +=
-          sfluxmod(ix, gf, beta_col, safe_sflux_dffact(parameters, ix), swg);
+          sfluxmod(ix, gf, beta_col, 1.0 / beta_at(parameters, 0, ix), swg);
     }
   }
 
@@ -178,30 +170,20 @@ TnParm tfnparm(const std::array<double, kMaxBasisFunctions>& gf,
     swg_ut[static_cast<std::size_t>(i)] = swg[static_cast<std::size_t>(kCut + i)];
   }
 
-  tpro.tex += sfluxmod(kItex, gf, beta_tex, safe_sflux_dffact(parameters, kItex), swg);
+  tpro.tex += sfluxmod(kItex, gf, beta_tex, 1.0 / beta_at(parameters, 0, kItex), swg);
   tpro.tex += geomag(geomag_params_for_col(parameters, kItex), bf_mag, plg_mag, swg_mag);
   tpro.tex += utdep(ut_params_for_col(parameters, kItex), bf_ut, swg_ut);
 
   if (smod_enabled(parameters, kItgb0)) {
-    tpro.tgb0 += sfluxmod(kItgb0, gf, beta_tgb0, safe_sflux_dffact(parameters, kItgb0), swg);
+    tpro.tgb0 += sfluxmod(kItgb0, gf, beta_tgb0, 1.0 / beta_at(parameters, 0, kItgb0), swg);
   }
   tpro.tgb0 += geomag(geomag_params_for_col(parameters, kItgb0), bf_mag, plg_mag, swg_mag);
 
   if (smod_enabled(parameters, kItb0)) {
-    tpro.tb0 += sfluxmod(kItb0, gf, beta_tb0, safe_sflux_dffact(parameters, kItb0), swg);
+    tpro.tb0 += sfluxmod(kItb0, gf, beta_tb0, 1.0 / beta_at(parameters, 0, kItb0), swg);
   }
   tpro.tb0 += geomag(geomag_params_for_col(parameters, kItb0), bf_mag, plg_mag, swg_mag);
-
-  if (!std::isfinite(tpro.tb0) || tpro.tb0 <= 0.0) {
-    tpro.tb0 = 190.0;
-  }
-  if (!std::isfinite(tpro.tex) || tpro.tex <= tpro.tb0) {
-    tpro.tex = tpro.tb0 + 500.0;
-  }
   tpro.sigma = tpro.tgb0 / (tpro.tex - tpro.tb0);
-  if (!std::isfinite(tpro.sigma) || std::abs(tpro.sigma) < 1e-8) {
-    tpro.sigma = 0.03;
-  }
 
   const auto bc = continuity_coefficients(tpro.tex, tpro.tgb0, tpro.tb0);
   tpro.cf[static_cast<std::size_t>(kItb0)] = bc[0] - 10.0 * bc[1] + 33.333333333333336 * bc[2];
