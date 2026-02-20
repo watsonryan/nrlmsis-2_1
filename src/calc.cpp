@@ -13,6 +13,7 @@
 #include "msis21/detail/constants.hpp"
 #include "msis21/detail/gfn.hpp"
 #include "msis21/detail/parm_reader.hpp"
+#include "msis21/detail/utils.hpp"
 
 namespace msis21::detail {
 
@@ -193,7 +194,7 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
 
   GlobeCalculator globe;
   GlobeInput globe_input;
-  globe_input.doy = static_cast<double>(in.iyd % 1000);
+  globe_input.doy = static_cast<double>(in.iyd % 1000) + in.sec / 86400.0;
   globe_input.utsec = in.sec;
   globe_input.lat = in.glat_deg;
   globe_input.lon = in.glon_deg;
@@ -223,7 +224,7 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
     sigma = 0.03;
   }
 
-  const double z = in.alt_km;
+  const double z = alt2gph(in.glat_deg, in.alt_km);
   double t = 0.0;
   if (z <= 86.0) {
     t = 288.15 - 6.5 * z;
