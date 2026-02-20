@@ -13,6 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(msis21 STATIC
   src/msis21.cpp
   src/model.cpp
+  src/parm_reader.cpp
 )
 add_library(msis21::msis21 ALIAS msis21)
 
