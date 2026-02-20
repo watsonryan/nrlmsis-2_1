@@ -26,6 +26,7 @@ target_link_libraries(msis21_tests
     msis21::msis21
     GTest::gtest_main
 )
+target_compile_definitions(msis21_tests PRIVATE MSIS21_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 include(GoogleTest)
 gtest_discover_tests(msis21_tests)

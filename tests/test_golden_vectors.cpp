@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include "test_paths.hpp"
+
 namespace {
 
 std::vector<msis21::Input> load_inputs(const std::filesystem::path& path) {
@@ -50,7 +52,12 @@ std::size_t count_reference_rows(const std::filesystem::path& path) {
   std::string line;
   std::size_t count = 0;
   while (std::getline(in, line)) {
-    if (!line.empty() && line.find_first_not_of(" \t\r\n") != std::string::npos) {
+    if (line.empty() || line.find_first_not_of(" \t\r\n") == std::string::npos) {
+      continue;
+    }
+    std::istringstream iss(line);
+    int iyd = 0;
+    if (iss >> iyd) {
       ++count;
     }
   }
@@ -60,14 +67,14 @@ std::size_t count_reference_rows(const std::filesystem::path& path) {
 }  // namespace
 
 TEST(GoldenVectors, HarnessLoadsAndEvaluatesDataset) {
-  const auto inputs = load_inputs("data/msis2.1_test_in.txt");
-  const auto ref_rows = count_reference_rows("data/msis2.1_test_ref_dp.txt");
+  const auto inputs = load_inputs(msis21_data_path("msis2.1_test_in.txt"));
+  const auto ref_rows = count_reference_rows(msis21_data_path("msis2.1_test_ref_dp.txt"));
 
   ASSERT_EQ(inputs.size(), 200U);
   ASSERT_EQ(ref_rows, 200U);
 
   msis21::Options options;
-  auto model = msis21::Model::load_from_file("data/msis21.parm", options);
+  auto model = msis21::Model::load_from_file(msis21_data_path("msis21.parm"), options);
 
   std::size_t numerical_error_count = 0;
   for (const auto& input : inputs) {
