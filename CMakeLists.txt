@@ -20,6 +20,7 @@ add_library(msis21 STATIC
   src/tfn.cpp
   src/dfn.cpp
   src/calc.cpp
+  src/gtd8d.cpp
 )
 add_library(msis21::msis21 ALIAS msis21)
 
