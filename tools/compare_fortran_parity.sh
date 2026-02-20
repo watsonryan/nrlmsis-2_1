@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FORTRAN_DIR="${1:-/Users/rmw/Documents/code/old_NRL}"
-BUILD_PRESET="${BUILD_PRESET:-macos-clang-debug}"
+BUILD_PRESET="${BUILD_PRESET:-macos-debug}"
 BUILD_DIR="${ROOT_DIR}/build/${BUILD_PRESET}"
 TMP_DIR="${TMPDIR:-/tmp}/msis_parity.$$"
 mkdir -p "${TMP_DIR}"

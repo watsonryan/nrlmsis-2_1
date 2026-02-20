@@ -18,144 +18,157 @@
       }
     },
     {
-      "name": "macos-clang-debug",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "macos-clang-release",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "macos-clang-sanitize",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
-        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
-        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
-      }
-    },
-    {
-      "name": "macos-clang-profile",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer"
-      }
-    },
-    {
-      "name": "macos-clang-strict-parity",
-      "inherits": "macos-clang-release",
-      "cacheVariables": {
-        "MSIS21_STRICT_PARITY_CPP": "ON"
-      }
-    },
-    {
-      "name": "linux-clang-debug",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "linux-clang-release",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "clang++"
-      }
-    },
-    {
-      "name": "linux-clang-sanitize",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
-        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
-        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
-      }
-    },
-    {
-      "name": "linux-clang-profile",
-      "inherits": "base",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer"
-      }
-    },
-    {
-      "name": "linux-clang-strict-parity",
-      "inherits": "linux-clang-release",
-      "cacheVariables": {
-        "MSIS21_STRICT_PARITY_CPP": "ON"
-      }
-    },
-    {
-      "name": "windows-msvc-debug",
-      "inherits": "base",
-      "generator": "Ninja",
+      "name": "base-debug",
+      "hidden": true,
+      "inherits": ["base"],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "windows-msvc-release",
-      "inherits": "base",
-      "generator": "Ninja",
+      "name": "base-release",
+      "hidden": true,
+      "inherits": ["base"],
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "windows-msvc-sanitize",
-      "inherits": "base",
-      "generator": "Ninja",
+      "name": "base-asan",
+      "hidden": true,
+      "inherits": ["base-debug"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address"
+      }
+    },
+    {
+      "name": "base-ubsan",
+      "hidden": true,
+      "inherits": ["base-debug"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fno-omit-frame-pointer",
+        "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=undefined",
+        "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=undefined"
+      }
+    },
+    {
+      "name": "base-profile",
+      "hidden": true,
+      "inherits": ["base-release"],
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS_RELEASE": "-O2 -g -fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "base-strict-parity",
+      "hidden": true,
+      "inherits": ["base-release"],
+      "cacheVariables": {
+        "MSIS21_STRICT_PARITY_CPP": "ON"
+      }
+    },
+
+    {
+      "name": "macos-debug",
+      "inherits": ["base-debug"]
+    },
+    {
+      "name": "macos-release",
+      "inherits": ["base-release"]
+    },
+    {
+      "name": "macos-asan",
+      "inherits": ["base-asan"]
+    },
+    {
+      "name": "macos-ubsan",
+      "inherits": ["base-ubsan"]
+    },
+    {
+      "name": "macos-profile",
+      "inherits": ["base-profile"]
+    },
+    {
+      "name": "macos-strict-parity",
+      "inherits": ["base-strict-parity"]
+    },
+
+    {
+      "name": "linux-debug",
+      "inherits": ["base-debug"]
+    },
+    {
+      "name": "linux-release",
+      "inherits": ["base-release"]
+    },
+    {
+      "name": "linux-asan",
+      "inherits": ["base-asan"]
+    },
+    {
+      "name": "linux-ubsan",
+      "inherits": ["base-ubsan"]
+    },
+    {
+      "name": "linux-profile",
+      "inherits": ["base-profile"]
+    },
+    {
+      "name": "linux-strict-parity",
+      "inherits": ["base-strict-parity"]
+    },
+
+    {
+      "name": "windows-debug",
+      "inherits": ["base-debug"]
+    },
+    {
+      "name": "windows-release",
+      "inherits": ["base-release"]
+    },
+    {
+      "name": "windows-asan",
+      "inherits": ["base-debug"],
+      "cacheVariables": {
         "CMAKE_CXX_FLAGS": "/fsanitize=address"
       }
     },
     {
-      "name": "windows-msvc-profile",
-      "inherits": "base",
-      "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /Zi"
-      }
+      "name": "windows-profile",
+      "inherits": ["base-profile"]
+    },
+    {
+      "name": "windows-strict-parity",
+      "inherits": ["base-strict-parity"]
     }
   ],
   "buildPresets": [
-    {"name": "macos-clang-debug", "configurePreset": "macos-clang-debug"},
-    {"name": "macos-clang-release", "configurePreset": "macos-clang-release"},
-    {"name": "macos-clang-sanitize", "configurePreset": "macos-clang-sanitize"},
-    {"name": "macos-clang-profile", "configurePreset": "macos-clang-profile"},
-    {"name": "macos-clang-strict-parity", "configurePreset": "macos-clang-strict-parity"},
-    {"name": "linux-clang-debug", "configurePreset": "linux-clang-debug"},
-    {"name": "linux-clang-release", "configurePreset": "linux-clang-release"},
-    {"name": "linux-clang-sanitize", "configurePreset": "linux-clang-sanitize"},
-    {"name": "linux-clang-profile", "configurePreset": "linux-clang-profile"},
-    {"name": "linux-clang-strict-parity", "configurePreset": "linux-clang-strict-parity"},
-    {"name": "windows-msvc-debug", "configurePreset": "windows-msvc-debug"},
-    {"name": "windows-msvc-release", "configurePreset": "windows-msvc-release"},
-    {"name": "windows-msvc-sanitize", "configurePreset": "windows-msvc-sanitize"},
-    {"name": "windows-msvc-profile", "configurePreset": "windows-msvc-profile"}
+    { "name": "macos-debug", "configurePreset": "macos-debug" },
+    { "name": "macos-release", "configurePreset": "macos-release" },
+    { "name": "macos-asan", "configurePreset": "macos-asan" },
+    { "name": "macos-ubsan", "configurePreset": "macos-ubsan" },
+    { "name": "macos-profile", "configurePreset": "macos-profile" },
+    { "name": "macos-strict-parity", "configurePreset": "macos-strict-parity" },
+
+    { "name": "linux-debug", "configurePreset": "linux-debug" },
+    { "name": "linux-release", "configurePreset": "linux-release" },
+    { "name": "linux-asan", "configurePreset": "linux-asan" },
+    { "name": "linux-ubsan", "configurePreset": "linux-ubsan" },
+    { "name": "linux-profile", "configurePreset": "linux-profile" },
+    { "name": "linux-strict-parity", "configurePreset": "linux-strict-parity" },
+
+    { "name": "windows-debug", "configurePreset": "windows-debug" },
+    { "name": "windows-release", "configurePreset": "windows-release" },
+    { "name": "windows-asan", "configurePreset": "windows-asan" },
+    { "name": "windows-profile", "configurePreset": "windows-profile" },
+    { "name": "windows-strict-parity", "configurePreset": "windows-strict-parity" }
   ],
   "testPresets": [
-    {"name": "macos-clang-debug", "configurePreset": "macos-clang-debug", "output": {"outputOnFailure": true}},
-    {"name": "macos-clang-strict-parity", "configurePreset": "macos-clang-strict-parity", "output": {"outputOnFailure": true}}
+    { "name": "macos-debug", "configurePreset": "macos-debug", "output": { "outputOnFailure": true } },
+    { "name": "macos-asan", "configurePreset": "macos-asan", "output": { "outputOnFailure": true } },
+    { "name": "macos-ubsan", "configurePreset": "macos-ubsan", "output": { "outputOnFailure": true } },
+    { "name": "macos-strict-parity", "configurePreset": "macos-strict-parity", "output": { "outputOnFailure": true } }
   ]
 }

@@ -15,16 +15,16 @@ flowchart LR
 
 ## Build and Test
 ```bash
-cmake --preset macos-clang-debug
-cmake --build --preset macos-clang-debug
-ctest --preset macos-clang-debug --output-on-failure
+cmake --preset macos-debug
+cmake --build --preset macos-debug
+ctest --preset macos-debug --output-on-failure
 ```
 
 Strict C++ parity profile:
 ```bash
-cmake --preset macos-clang-strict-parity
-cmake --build --preset macos-clang-strict-parity
-ctest --preset macos-clang-strict-parity --output-on-failure
+cmake --preset macos-strict-parity
+cmake --build --preset macos-strict-parity
+ctest --preset macos-strict-parity --output-on-failure
 ```
 
 ## Logging and Printing
@@ -32,18 +32,18 @@ ctest --preset macos-clang-strict-parity --output-on-failure
 - CLI/output formatting uses `fmt`.
 - Optional log level override:
 ```bash
-MSIS21_LOG_LEVEL=debug ./build/macos-clang-debug/msis21_cli 70178 64800 400 0 0 12 150 150 4
+MSIS21_LOG_LEVEL=debug ./build/macos-debug/msis21_cli 70178 64800 400 0 0 12 150 150 4
 ```
 
 ## Examples
 Single-point query:
 ```bash
-./build/macos-clang-debug/msis21_cli 70178 64800 400 0 0 12 150 150 4
+./build/macos-debug/msis21_cli 70178 64800 400 0 0 12 150 150 4
 ```
 
 Density/AO profile from 2000 km to 250 km in g/cm^3:
 ```bash
-./build/macos-clang-debug/msis21_profile_cli 2000 250 25
+./build/macos-debug/msis21_profile_cli 2000 250 25
 ```
 Columns:
 - `alt_km`
@@ -55,7 +55,7 @@ Columns:
 Generate a plot (similar workflow to DTM-style profile plots):
 ```bash
 MPLCONFIGDIR=/tmp/mpl python3 examples/plot_msis_profile.py \
-  --cli build/macos-clang-debug/msis21_profile_cli \
+  --cli build/macos-debug/msis21_profile_cli \
   --start-km 2000 --end-km 250 --step-km 25 \
   --output docs/figures/msis_profile_2000_250.png
 ```
@@ -63,7 +63,7 @@ MPLCONFIGDIR=/tmp/mpl python3 examples/plot_msis_profile.py \
 ## Troubleshooting
 If you see `ninja: warning: premature end of file; recovering`, reset stale Ninja metadata:
 ```bash
-./tools/reset_ninja_state.sh build/macos-clang-debug
+./tools/reset_ninja_state.sh build/macos-debug
 ```
 
 ## Parity Notes
