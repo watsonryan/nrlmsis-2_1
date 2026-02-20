@@ -74,14 +74,21 @@ tail -n +2 "${INPUT_FILE}" | awk 'NF>=9{print $1,$2,$3,$4,$5,$6,$7,$8,$9}' | whi
 done
 
 paste "${FORTRAN_OUT}" "${CPP_OUT}" | awk '
-BEGIN{for(i=1;i<=11;i++){maxr[i]=0;maxa[i]=0}}
+BEGIN{
+  tiny=1e-30;
+  for(i=1;i<=11;i++){maxr[i]=0;maxa[i]=0;maxrg[i]=0}
+}
 {
   for(i=1;i<=11;i++){
     r=$i; o=$(i+11); d=o-r; ad=(d<0?-d:d); ar=(r!=0?ad/((r<0?-r:r)):ad);
+    rg=ad/(((r<0?-r:r)>tiny)?(r<0?-r:r):tiny);
     if(ar>maxr[i])maxr[i]=ar;
+    if(rg>maxrg[i])maxrg[i]=rg;
     if(ad>maxa[i])maxa[i]=ad;
   }
 }
 END{
-  for(i=1;i<=11;i++) printf("col%d max_rel=%.6e max_abs=%.6e\n",i,maxr[i],maxa[i]);
+  for(i=1;i<=11;i++) {
+    printf("col%d max_rel=%.6e max_rel_guarded=%.6e max_abs=%.6e\n",i,maxr[i],maxrg[i],maxa[i]);
+  }
 }' 
