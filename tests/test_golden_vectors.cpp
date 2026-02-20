@@ -104,26 +104,50 @@ TEST(GoldenVectors, HarnessLoadsAndEvaluatesDataset) {
   msis21::Options options;
   auto model = msis21::Model::load_from_file(msis21_data_path("msis21.parm"), options);
 
+  auto rel_err = [](double got, double ref) {
+    const double denom = std::max(std::abs(ref), 1e-30);
+    return std::abs(got - ref) / denom;
+  };
+  constexpr double kTolHe = 2.0e-3;
+  constexpr double kTolO = 2.0e-3;
+  constexpr double kTolN2 = 2.0e-3;
+  constexpr double kTolO2 = 2.0e-3;
+  constexpr double kTolAr = 2.0e-3;
+  constexpr double kTolRho = 2.0e-3;
+  constexpr double kTolH = 2.0e-3;
+  constexpr double kTolN = 2.0e-3;
+  constexpr double kTolOAnom = 2.0e-3;
+  constexpr double kTolNo = 2.0e-3;
+  constexpr double kTolT = 1.0e-4;
+
   for (std::size_t i = 0; i < inputs.size(); ++i) {
     const auto& input = inputs[i];
     const auto& ref = refs[i];
     const auto result = model.evaluate(input);
     EXPECT_EQ(result.status, msis21::Status::Ok);
 
-    EXPECT_TRUE(std::isfinite(result.out.he));
-    EXPECT_TRUE(std::isfinite(result.out.o));
-    EXPECT_TRUE(std::isfinite(result.out.n2));
-    EXPECT_TRUE(std::isfinite(result.out.o2));
-    EXPECT_TRUE(std::isfinite(result.out.ar));
-    EXPECT_TRUE(std::isfinite(result.out.rho));
-    EXPECT_TRUE(std::isfinite(result.out.h));
-    EXPECT_TRUE(std::isfinite(result.out.n));
-    EXPECT_TRUE(std::isfinite(result.out.o_anom));
-    EXPECT_TRUE(std::isfinite(result.out.no));
-    EXPECT_TRUE(std::isfinite(result.out.t));
-    EXPECT_GE(result.out.rho, 0.0);
-    EXPECT_GE(result.out.t, 100.0);
-    EXPECT_GE(result.out.t, ref.t - 200.0);
-    EXPECT_LE(result.out.t, ref.t + 200.0);
+    ASSERT_TRUE(std::isfinite(result.out.he));
+    ASSERT_TRUE(std::isfinite(result.out.o));
+    ASSERT_TRUE(std::isfinite(result.out.n2));
+    ASSERT_TRUE(std::isfinite(result.out.o2));
+    ASSERT_TRUE(std::isfinite(result.out.ar));
+    ASSERT_TRUE(std::isfinite(result.out.rho));
+    ASSERT_TRUE(std::isfinite(result.out.h));
+    ASSERT_TRUE(std::isfinite(result.out.n));
+    ASSERT_TRUE(std::isfinite(result.out.o_anom));
+    ASSERT_TRUE(std::isfinite(result.out.no));
+    ASSERT_TRUE(std::isfinite(result.out.t));
+
+    EXPECT_LE(rel_err(result.out.he, ref.he), kTolHe);
+    EXPECT_LE(rel_err(result.out.o, ref.o), kTolO);
+    EXPECT_LE(rel_err(result.out.n2, ref.n2), kTolN2);
+    EXPECT_LE(rel_err(result.out.o2, ref.o2), kTolO2);
+    EXPECT_LE(rel_err(result.out.ar, ref.ar), kTolAr);
+    EXPECT_LE(rel_err(result.out.rho, ref.rho), kTolRho);
+    EXPECT_LE(rel_err(result.out.h, ref.h), kTolH);
+    EXPECT_LE(rel_err(result.out.n, ref.n), kTolN);
+    EXPECT_LE(rel_err(result.out.o_anom, ref.o_anom), kTolOAnom);
+    EXPECT_LE(rel_err(result.out.no, ref.no), kTolNo);
+    EXPECT_LE(rel_err(result.out.t, ref.t), kTolT);
   }
 }
