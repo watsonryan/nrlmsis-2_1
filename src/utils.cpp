@@ -13,6 +13,10 @@
 
 namespace msis21::detail {
 
+#ifdef MSIS21_USE_FORTRAN_ALT2GPH
+extern "C" double msis21_fortran_alt2gph(double lat, double alt);
+#endif
+
 double BsplineResult::value(int rel_index, int order) const {
   return s[rel_index + 5][order];
 }
@@ -20,43 +24,38 @@ double BsplineResult::value(int rel_index, int order) const {
 void BsplineResult::set(int rel_index, int order, double v) { s[rel_index + 5][order] = v; }
 
 double alt2gph(double lat_deg, double alt_km) {
+#ifdef MSIS21_USE_FORTRAN_ALT2GPH
+  return msis21_fortran_alt2gph(lat_deg, alt_km);
+#else
   constexpr double deg2rad = 0.017453292519943295;
   constexpr double a = 6378.1370 * 1e3;
-  constexpr double finv = 298.257223563;
   constexpr double w = 7292115e-11;
-  const double gm = static_cast<double>(398600.4418f) * 1.0e9;
-
   constexpr double asq = a * a;
   constexpr double wsq = w * w;
-  constexpr double f = 1.0 / finv;
-  constexpr double esq = 2.0 * f - f * f;
-  const double e = std::sqrt(esq);
-  const double elin = a * e;
-  const double elinsq = elin * elin;
-  const double epr = e / (1 - f);
-  const double q0 = ((1.0 + 3.0 / (epr * epr)) * std::atan(epr) - 3.0 / epr) / 2.0;
-  const double u0 = -gm * std::atan(epr) / elin - wsq * asq / 3.0;
+  constexpr double esq = 6.6943799901413165e-03;
+  constexpr double elin = 5.2185400842338527e+05;
+  constexpr double elinsq = 2.7233160610755466e+11;
+  constexpr double q0 = 7.3346257870809950e-05;
+  constexpr double u0 = -6.2636851039636947e+07;
   constexpr double g0 = 9.80665;
-  const double gm_div_elin = gm / elin;
+  constexpr double gm_div_elin = 7.6381599272226262e+08;
 
-  constexpr double x0sq = 2e7 * 2e7;
-  constexpr double hsq = 1.2e7 * 1.2e7;
+  constexpr double x0sq = 4.0e14;
+  constexpr double hsq = 1.44e14;
 
   const double altm = alt_km * 1000.0;
-  const double sinlat = std::sin(lat_deg * deg2rad);
-  const double sinsq = sinlat * sinlat;
-  const double v = a / std::sqrt(1 - esq * sinsq);
-  const double xp = v + altm;
-  const double zp = v * (1 - esq) + altm;
-  const double xsq = xp * xp * (1 - sinsq);
-  const double zsq = zp * zp * sinsq;
+  const double sinsq = std::pow(std::sin(lat_deg * deg2rad), 2.0);
+  const double v = a / std::sqrt(1.0 - esq * sinsq);
+  const double xsq = std::pow(v + altm, 2.0) * (1.0 - sinsq);
+  const double zsq = std::pow(v * (1.0 - esq) + altm, 2.0) * sinsq;
   const double rsq_min_elin = xsq + zsq - elinsq;
-  const double usq = rsq_min_elin / 2.0 + std::sqrt((rsq_min_elin * rsq_min_elin) / 4.0 + elinsq * zsq);
+  const double usq =
+      rsq_min_elin / 2.0 + std::sqrt(std::pow(rsq_min_elin, 2.0) / 4.0 + elinsq * zsq);
   const double cossqdelta = zsq / usq;
 
   const double epru = elin / std::sqrt(usq);
   const double atan_epru = std::atan(epru);
-  const double q = ((1 + 3.0 / (epru * epru)) * atan_epru - 3.0 / epru) / 2.0;
+  const double q = ((1.0 + 3.0 / (epru * epru)) * atan_epru - 3.0 / epru) / 2.0;
   double u = -gm_div_elin * atan_epru - wsq * (asq * q * (cossqdelta - 1 / 3.0) / q0) / 2.0;
 
   const double vc = (xsq <= x0sq) ? ((wsq / 2.0) * xsq)
@@ -64,6 +63,7 @@ double alt2gph(double lat_deg, double alt_km) {
   u -= vc;
 
   return (u - u0) / g0 / 1000.0;
+#endif
 }
 
 double gph2alt(double lat_deg, double gph_km) {

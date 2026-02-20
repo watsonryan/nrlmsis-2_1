@@ -133,5 +133,9 @@ inline constexpr std::array<double, 2> kC1noAdj = {
     1.6666666666666701e-01, -6.6666666666667005e-02};
 inline constexpr std::array<double, 4> kC1no = {
     1.5000000000000000e+00, -3.7500000000000000e+00, 0.0000000000000000e+00, 1.5000000000000000e+01};
+inline constexpr double kHRfactO1ref = 2.6894142136999510e-01;
+inline constexpr double kDHRfactO1ref = 6.4365636569180902e+00;
+inline constexpr double kHRfactNOref = 8.1757447619364365e-01;
+inline constexpr double kDHRfactNOref = 8.8843491992578505e-01;
 
 }  // namespace msis21::detail

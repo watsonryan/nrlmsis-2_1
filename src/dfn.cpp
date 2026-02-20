@@ -147,13 +147,6 @@ double spline_species_value(const std::array<double, kNsplO1 + 2>& cf, const Bsp
   return sum;
 }
 
-std::pair<double, double> hrfact_and_derivative_at_ref(double zref) {
-  const double gammaterm0 = std::tanh((zref - kZetagamma) * kHgamma);
-  const double hrfact_ref = 0.5 * (1.0 + gammaterm0);
-  const double dhrfact_ref = (1.0 - (zref - kZetagamma) * (1.0 - gammaterm0) * kHgamma) / hrfact_ref;
-  return {hrfact_ref, dhrfact_ref};
-}
-
 }  // namespace
 
 double pwmp(double z,
@@ -496,13 +489,12 @@ DnParm dfnparm(int ispec,
       dpro.cf[static_cast<std::size_t>(izf)] = subset_linear_dot(parameters, kO1Start, izf + 10, gf);
     }
     const double cterm = dpro.c * std::exp(-(dpro.zref - dpro.zeta_c) / dpro.hc);
-    const auto [hr_o1_ref, dhr_o1_ref] = hrfact_and_derivative_at_ref(kZetaA);
-    const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (hr_o1_ref * dpro.hr));
+    const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (kHRfactO1ref * dpro.hr));
     const double rterm = dpro.r * (1.0 + rterm0);
     const double mzref = pwmp(dpro.zref, dpro.zeta_mi, dpro.mi, dpro.ami);
     const double bc1 = dpro.lndref - cterm + rterm - dpro.cf[7] * kC1o1Adj[0];
     const double bc2 = -mzref * kG0DivKb / tpro.tzeta_a - tpro.dlntdz_a + cterm / dpro.hc +
-                       rterm * (1.0 - rterm0) / dpro.hr * dhr_o1_ref - dpro.cf[7] * kC1o1Adj[1];
+                       rterm * (1.0 - rterm0) / dpro.hr * kDHRfactO1ref - dpro.cf[7] * kC1o1Adj[1];
     dpro.cf[8] = bc1 * kC1o1[0] + bc2 * kC1o1[1];
     dpro.cf[9] = bc1 * kC1o1[2] + bc2 * kC1o1[3];
   }
@@ -514,13 +506,12 @@ DnParm dfnparm(int ispec,
           geomag(subset_geomag_params(parameters, kNoStart, izf + 10), bf_mag, plg_mag, swg_mag);
     }
     const double cterm = dpro.c * std::exp(-(dpro.zref - dpro.zeta_c) / dpro.hc);
-    const auto [hr_no_ref, dhr_no_ref] = hrfact_and_derivative_at_ref(kZetaB);
-    const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (hr_no_ref * dpro.hr));
+    const double rterm0 = std::tanh((dpro.zref - dpro.zeta_r) / (kHRfactNOref * dpro.hr));
     const double rterm = dpro.r * (1.0 + rterm0);
     const double mzref = pwmp(dpro.zref, dpro.zeta_mi, dpro.mi, dpro.ami);
     const double bc1 = dpro.lndref - cterm + rterm - dpro.cf[7] * kC1noAdj[0];
     const double bc2 = -mzref * kG0DivKb / tpro.tb0 - tpro.tgb0 / tpro.tb0 + cterm / dpro.hc +
-                       rterm * (1.0 - rterm0) / dpro.hr * dhr_no_ref - dpro.cf[7] * kC1noAdj[1];
+                       rterm * (1.0 - rterm0) / dpro.hr * kDHRfactNOref - dpro.cf[7] * kC1noAdj[1];
     dpro.cf[8] = bc1 * kC1no[0] + bc2 * kC1no[1];
     dpro.cf[9] = bc1 * kC1no[2] + bc2 * kC1no[3];
   }
