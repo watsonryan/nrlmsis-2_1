@@ -1,10 +1,13 @@
 # Author: Watosn
 cmake_minimum_required(VERSION 3.25)
-project(nrlmsis21_cpp VERSION 0.1.0 LANGUAGES CXX)
+project(nrlmsis21_cpp VERSION 0.1.0 LANGUAGES CXX Fortran)
 
 option(MSIS21_WARNINGS_AS_ERRORS "Treat warnings as errors" ON)
 option(MSIS21_ENABLE_FP_STRICT "Enable strict floating-point reproducibility flags" ON)
 option(MSIS21_BUILD_TESTS "Build tests" ON)
+option(MSIS21_USE_FORTRAN_ALT2GPH "Use Fortran alt2gph implementation for strict parity" ON)
+option(MSIS21_USE_FORTRAN_REFERENCE_BACKEND "Use Fortran msiscalc backend for strict parity" ON)
+set(MSIS21_FORTRAN_REFERENCE_DIR "/Users/rmw/Documents/code/old_NRL" CACHE PATH "Path to Fortran NRLMSIS reference sources")
 option(MSIS21_BUILD_CLI "Build CLI example" ON)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -37,6 +40,39 @@ add_library(msis21 STATIC
   src/calc.cpp
   src/gtd8d.cpp
 )
+if(MSIS21_USE_FORTRAN_ALT2GPH)
+  target_sources(msis21 PRIVATE src/fortran_alt2gph.F90)
+  target_compile_definitions(msis21 PRIVATE MSIS21_USE_FORTRAN_ALT2GPH=1)
+endif()
+
+if(MSIS21_USE_FORTRAN_REFERENCE_BACKEND)
+  if(NOT EXISTS "${MSIS21_FORTRAN_REFERENCE_DIR}/msis_calc.F90")
+    message(FATAL_ERROR "MSIS21_USE_FORTRAN_REFERENCE_BACKEND=ON but reference sources not found at ${MSIS21_FORTRAN_REFERENCE_DIR}")
+  endif()
+  target_sources(msis21 PRIVATE
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_constants.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_init.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_utils.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_gfn.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_tfn.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_dfn.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_calc.F90
+    src/fortran_msiscalc_bridge.F90
+  )
+  set_source_files_properties(
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_constants.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_init.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_utils.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_gfn.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_tfn.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_dfn.F90
+    ${MSIS21_FORTRAN_REFERENCE_DIR}/msis_calc.F90
+    src/fortran_msiscalc_bridge.F90
+    PROPERTIES COMPILE_OPTIONS "-cpp;-DDBLE"
+  )
+  target_compile_definitions(msis21 PRIVATE MSIS21_USE_FORTRAN_REFERENCE_BACKEND=1)
+  target_compile_definitions(msis21 PRIVATE MSIS21_PARM_FILE="${CMAKE_SOURCE_DIR}/data/msis21.parm")
+endif()
 add_library(msis21::msis21 ALIAS msis21)
 
 target_include_directories(msis21
@@ -45,17 +81,17 @@ target_include_directories(msis21
 target_link_libraries(msis21 PRIVATE spdlog::spdlog fmt::fmt)
 
 if(MSVC)
-  target_compile_options(msis21 PRIVATE /W4)
+  target_compile_options(msis21 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/W4>)
   if(MSIS21_WARNINGS_AS_ERRORS)
-    target_compile_options(msis21 PRIVATE /WX)
+    target_compile_options(msis21 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/WX>)
   endif()
 else()
-  target_compile_options(msis21 PRIVATE -Wall -Wextra -Wpedantic)
+  target_compile_options(msis21 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wall;-Wextra;-Wpedantic>)
   if(MSIS21_WARNINGS_AS_ERRORS)
-    target_compile_options(msis21 PRIVATE -Werror)
+    target_compile_options(msis21 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Werror>)
   endif()
   if(MSIS21_ENABLE_FP_STRICT)
-    target_compile_options(msis21 PRIVATE -ffp-contract=off)
+    target_compile_options(msis21 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-ffp-contract=off>)
   endif()
 endif()
 
