@@ -13,10 +13,6 @@
 
 namespace msis21::detail {
 
-#ifdef MSIS21_USE_FORTRAN_ALT2GPH
-extern "C" double msis21_fortran_alt2gph(double lat, double alt);
-#endif
-
 double BsplineResult::value(int rel_index, int order) const {
   return s[rel_index + 5][order];
 }
@@ -24,9 +20,6 @@ double BsplineResult::value(int rel_index, int order) const {
 void BsplineResult::set(int rel_index, int order, double v) { s[rel_index + 5][order] = v; }
 
 double alt2gph(double lat_deg, double alt_km) {
-#ifdef MSIS21_USE_FORTRAN_ALT2GPH
-  return msis21_fortran_alt2gph(lat_deg, alt_km);
-#else
   constexpr double deg2rad = 0.017453292519943295;
   constexpr double a = 6378.1370 * 1e3;
   constexpr double w = 7292115e-11;
@@ -63,7 +56,6 @@ double alt2gph(double lat_deg, double alt_km) {
   u -= vc;
 
   return (u - u0) / g0 / 1000.0;
-#endif
 }
 
 double gph2alt(double lat_deg, double gph_km) {
