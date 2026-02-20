@@ -23,20 +23,6 @@ namespace msis21::detail {
 
 namespace {
 
-#ifdef MSIS21_USE_FORTRAN_REFERENCE_BACKEND
-extern "C" void msis21_fortran_eval(int iyd,
-                                    float sec,
-                                    float alt,
-                                    float glat,
-                                    float glon,
-                                    float f107a,
-                                    float f107,
-                                    float apd,
-                                    double* tn,
-                                    double dn[10],
-                                    int* status);
-#endif
-
 bool validate_input(const Input& in) {
   if (in.sec < 0.0 || in.sec > 86400.0) {
     return false;
@@ -56,7 +42,7 @@ bool validate_input(const Input& in) {
   return true;
 }
 
-[[maybe_unused]] EtaTable make_eta_tn() {
+EtaTable make_eta_tn() {
   EtaTable eta{};
   for (int k = 2; k <= 6; ++k) {
     for (int j = 0; j <= kNl; ++j) {
@@ -67,10 +53,7 @@ bool validate_input(const Input& in) {
   return eta;
 }
 
-[[maybe_unused]] double spline_sum_rel(const std::array<double, kNl + 1>& coeff,
-                                       const BsplineResult& b,
-                                       int order,
-                                       int rel_min) {
+double spline_sum_rel(const std::array<double, kNl + 1>& coeff, const BsplineResult& b, int order, int rel_min) {
   double sum = 0.0;
   for (int rel = rel_min; rel <= 0; ++rel) {
     const int idx = b.i + rel;
@@ -93,7 +76,7 @@ void set_indices(std::array<bool, kMaxBasisFunctions>& swg, const std::vector<in
   }
 }
 
-[[maybe_unused]] std::array<bool, kMaxBasisFunctions> legacy_switches_to_basis(const Options& options) {
+std::array<bool, kMaxBasisFunctions> legacy_switches_to_basis(const Options& options) {
   std::array<bool, kMaxBasisFunctions> swg;
   swg.fill(true);
 
@@ -226,38 +209,6 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
     return CalcResult{.status = Status::ParmFileFormatError};
   }
 
-#ifdef MSIS21_USE_FORTRAN_REFERENCE_BACKEND
-  const float sec = static_cast<float>(in.sec);
-  const float alt = static_cast<float>(in.alt_km);
-  const float glat = static_cast<float>(in.glat_deg);
-  const float glon = static_cast<float>(in.glon_deg);
-  const float f107a = static_cast<float>(in.f107a);
-  const float f107 = static_cast<float>(in.f107);
-  const float apd = static_cast<float>(in.ap);
-  double tn = 0.0;
-  double dn_m3[10]{};
-  int fstatus = 0;
-  msis21_fortran_eval(in.iyd, sec, alt, glat, glon, f107a, f107, apd, &tn, dn_m3, &fstatus);
-  if (fstatus != 0) {
-    return CalcResult{.status = Status::NumericalError};
-  }
-  auto m3_to_cm3 = [](double x) { return x == kDmissing ? kDmissing : x * 1.0e-6; };
-  Output out{};
-  out.he = m3_to_cm3(dn_m3[4]);
-  out.o = m3_to_cm3(dn_m3[3]);
-  out.n2 = m3_to_cm3(dn_m3[1]);
-  out.o2 = m3_to_cm3(dn_m3[2]);
-  out.ar = m3_to_cm3(dn_m3[6]);
-  out.rho = (dn_m3[0] == kDmissing ? kDmissing : dn_m3[0] * 1.0e-3);
-  out.h = m3_to_cm3(dn_m3[5]);
-  out.n = m3_to_cm3(dn_m3[7]);
-  out.o_anom = m3_to_cm3(dn_m3[8]);
-  out.no = m3_to_cm3(dn_m3[9]);
-  out.t = tn;
-  (void)options;
-  return CalcResult{.status = Status::Ok, .out = out};
-#else
-
   GlobeCalculator globe;
   const auto f32 = [](double x) { return static_cast<double>(static_cast<float>(x)); };
   GlobeInput globe_input;
@@ -362,7 +313,6 @@ CalcResult evaluate_msiscalc(const Input& in, const Options& options, const Para
   out.no = no;
   out.t = t;
   return CalcResult{.status = Status::Ok, .out = out};
-#endif
 }
 
 }  // namespace msis21::detail
