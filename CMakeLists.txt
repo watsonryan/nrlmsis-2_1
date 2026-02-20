@@ -10,7 +10,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_library(msis21 STATIC src/msis21.cpp)
+add_library(msis21 STATIC
+  src/msis21.cpp
+  src/model.cpp
+)
 add_library(msis21::msis21 ALIAS msis21)
 
 target_include_directories(msis21
