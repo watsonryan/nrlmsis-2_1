@@ -1,7 +1,6 @@
 # NRLMSIS 2.1 C++20 Port
 
-C++20 port and integration layer for NRLMSIS 2.1 with deterministic build presets and reference-parity validation.
-NRLMSIS stands for **Naval Research Laboratory Mass Spectrometer and Incoherent Scatter radar** atmospheric model.
+C++20 port and integration layer for the NRLMSIS 2.1 (**Naval Research Laboratory Mass Spectrometer and Incoherent Scatter radar**) atmospheric model.
 
 ## Architecture
 ```mermaid
